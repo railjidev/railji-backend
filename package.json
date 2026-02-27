@@ -20,6 +20,8 @@
     "stage:dashboard": "npm run build:shared && npm run build:dashboard && cd apps/railji-dashboard && npm run start:prod",
     "start:business": "npm install && cd libs/shared && npm install && cd ../.. && cd apps/railji-business && npm install && cd ../.. && npm run build:shared && npm run build:business && cd apps/railji-business && npm run start:prod",
     "start:dashboard": "npm install && cd libs/shared && npm install && cd ../.. && cd apps/railji-dashboard && npm install && cd ../.. && npm run build:shared && npm run build:dashboard && cd apps/railji-dashboard && npm run start:prod",
+    "prod:business": "npm run build:shared && npm run build:business && cd apps/railji-business && npm run start:prod",
+    "prod:dashboard": "npm run build:shared && npm run build:dashboard && cd apps/railji-dashboard && npm run start:prod",
     "lint": "npm run lint:business && npm run lint:dashboard",
     "lint:business": "cd apps/railji-business && npm run lint",
     "lint:dashboard": "cd apps/railji-dashboard && npm run lint",
