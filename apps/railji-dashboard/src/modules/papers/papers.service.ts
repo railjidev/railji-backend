@@ -22,11 +22,15 @@ export class PapersService {
     try {
       const paperId = `paper-${nanoid(6)}`;
 
-      // Extract questions from DTO
-      const { questions, ...paperData } = createPaperDto;
+      // Extract questions and username from DTO
+      const { questions, username, ...paperData } = createPaperDto;
 
       const promises = [
-        this.paperModel.create({ paperId, ...paperData }),
+        this.paperModel.create({ 
+          paperId, 
+          ...paperData,
+          ...(username && { createdBy: username }),
+        }),
         this.questionBankModel.create({
           departmentId: createPaperDto.departmentId,
           paperId,
@@ -51,12 +55,18 @@ export class PapersService {
     updatePaperDto: UpdatePaperDto,
   ): Promise<any> {
     try {
-      const { questions, ...paperData } = updatePaperDto;
+      const { questions, username, ...paperData } = updatePaperDto;
+
+      // Prepare paper update data with updatedBy field
+      const paperUpdateData = {
+        ...paperData,
+        ...(username && { updatedBy: username }),
+      };
 
       // Always make exactly 2 parallel calls - one for paper, one for questions
       await Promise.all([
-        Object.keys(paperData).length > 0
-          ? this.paperModel.findOneAndUpdate({ paperId }, paperData).exec()
+        Object.keys(paperUpdateData).length > 0
+          ? this.paperModel.findOneAndUpdate({ paperId }, paperUpdateData).exec()
           : Promise.resolve(),
         questions
           ? this.questionBankModel

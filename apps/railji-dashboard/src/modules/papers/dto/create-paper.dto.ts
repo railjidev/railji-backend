@@ -122,4 +122,8 @@ export class CreatePaperDto {
   @IsOptional()
   @Type(() => Object)
   metadata?: { filename?: string };
+
+  @IsOptional()
+  @IsString()
+  username?: string;
 }

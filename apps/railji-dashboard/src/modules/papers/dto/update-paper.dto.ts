@@ -127,4 +127,8 @@ export class UpdatePaperDto {
   @ValidateNested({ each: true })
   @Type(() => QuestionDto)
   questions?: QuestionDto[];
+
+  @IsOptional()
+  @IsString()
+  username?: string;
 }
