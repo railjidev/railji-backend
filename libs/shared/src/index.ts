@@ -27,6 +27,7 @@ export { CacheService } from './services/cache.service';
 export { ErrorHandlerService } from './services/error-handler.service';
 
 // Schemas
+export { User, UserSchema } from './schemas/user.schema';
 export { Paper, PaperSchema } from './schemas/paper.schema';
 export {
   QuestionBank,

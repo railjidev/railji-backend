@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException, ConflictException } from '@nestj
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { nanoid } from 'nanoid';
-import { User } from './schemas/user.schema';
+import { User } from '@libs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CacheService, ErrorHandlerService } from '@railji/shared';
 
