@@ -93,3 +93,17 @@ export class StartExamDto {
   @IsNotEmpty()
   departmentId: string;
 }
+
+export class GetExamsByUserIdDto {
+  @IsOptional()
+  @IsString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsString()
+  endDate?: string;
+
+  @IsOptional()
+  @IsString()
+  departmentId?: string;
+}

@@ -6,9 +6,14 @@ import {
   HttpCode,
   Get,
   Param,
+  Query,
 } from '@nestjs/common';
 import { ExamsService } from './exams.service';
-import { SubmitExamDto, StartExamDto } from './dto/exam.dto';
+import {
+  SubmitExamDto,
+  StartExamDto,
+  GetExamsByUserIdDto,
+} from './dto/exam.dto';
 
 @Controller('exams')
 export class ExamsController {
@@ -43,6 +48,20 @@ export class ExamsController {
     const result = await this.examsService.fetchExamByExamId(examId);
     return {
       message: 'Exam fetched successfully',
+      data: result,
+    };
+  }
+
+  // GET /exams/user/:userId - Fetch all exams by userId
+  @Get('user/:userId')
+  @HttpCode(HttpStatus.OK)
+  async getExamsByUserId(
+    @Param('userId') userId: string,
+    @Query() query: GetExamsByUserIdDto,
+  ) {
+    const result = await this.examsService.fetchExamsByUserId(userId, query);
+    return {
+      message: 'Exams fetched successfully',
       data: result,
     };
   }

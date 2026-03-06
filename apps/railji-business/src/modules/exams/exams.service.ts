@@ -7,10 +7,18 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { randomUUID } from 'crypto';
+import { groupBy, map, meanBy, sumBy, countBy } from 'lodash';
 import { Exam } from './schemas/exam.schema';
 import { SubmitExamDto, StartExamDto } from './dto/exam.dto';
 import { PapersService } from '../papers/papers.service';
 import { ErrorHandlerService } from '@railji/shared';
+import { EXAM_SUBMISSION_STATUS } from '../../constants/app.constants';
+import {
+  DepartmentStats,
+  DateRange,
+  ExamQueryParams,
+  ExamsByUserIdResponse,
+} from './interfaces/exam.interface';
 
 @Injectable()
 export class ExamsService {
@@ -37,7 +45,7 @@ export class ExamsService {
         paperId,
         departmentId,
         responses: [],
-        status: 'in-progress',
+        status: EXAM_SUBMISSION_STATUS.IN_PROGRESS,
         startTime: new Date(),
         deviceInfo: {
           device: 'Unknown',
@@ -80,7 +88,7 @@ export class ExamsService {
         throw new NotFoundException(`Paper with ID ${paperId} not found`);
       }
 
-      if (exam.status !== 'in-progress') {
+      if (exam.status !== EXAM_SUBMISSION_STATUS.IN_PROGRESS) {
         throw new BadRequestException(
           `Exam ${examId} is already ${exam.status}`,
         );
@@ -148,18 +156,18 @@ export class ExamsService {
       exam.percentage = percentage;
       exam.accuracy = accuracy;
       exam.endTime = new Date();
-      exam.status = 'submitted';
+      exam.status = EXAM_SUBMISSION_STATUS.SUBMITTED;
       exam.isPassed = isPassed;
       exam.remarks = remarks;
-      
+
       // Calculate time taken in hours, minutes and seconds
       const timeTakenInSeconds = Math.floor(
-        (exam.endTime.getTime() - exam.startTime.getTime()) / 1000
+        (exam.endTime.getTime() - exam.startTime.getTime()) / 1000,
       );
       const hours = Math.floor(timeTakenInSeconds / 3600);
       const minutes = Math.floor((timeTakenInSeconds % 3600) / 60);
       const seconds = timeTakenInSeconds % 60;
-      
+
       exam.timeTaken = {
         hours,
         minutes,
@@ -208,5 +216,130 @@ export class ExamsService {
         context: 'ExamsService.fetchExamByExamId',
       });
     }
+  }
+
+  // Get all exams by userId
+  async fetchExamsByUserId(
+    userId: string,
+    query?: ExamQueryParams,
+  ): Promise<ExamsByUserIdResponse> {
+    try {
+      const { startDate, endDate } = this.getDateRange(query);
+      const filter: Record<string, any> = {
+        userId,
+        createdAt: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      };
+
+      /* if (query.departmentId) {
+      filter.departmentId = query.departmentId;
+    } */
+
+      // Fetch exams without responses field
+      const exams = await this.examModel
+        .find(filter)
+        .select('-responses')
+        .sort({ createdAt: -1 })
+        .exec();
+
+      if (!exams || exams.length === 0) {
+        throw new NotFoundException(
+          `No exams found for user ${userId} in the specified date range`,
+        );
+      }
+
+      const departmentData = this.groupAndCalculateStats(exams);
+
+      return {
+        totalExams: exams.length,
+        totalDepartments: departmentData.length,
+        dateRange: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        },
+        departments: departmentData,
+      };
+    } catch (error) {
+      this.errorHandler.handle(error, {
+        context: 'ExamsService.fetchExamsByUserId',
+      });
+    }
+  }
+
+  private getDateRange(query?: ExamQueryParams): DateRange {
+    const now = new Date();
+    const defaultStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const defaultEndDate = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    const startDate = query?.startDate
+      ? new Date(query.startDate)
+      : defaultStartDate;
+    const endDate = query?.endDate ? new Date(query.endDate) : defaultEndDate;
+
+    // Set end date to end of day if time is not specified
+    if (
+      query?.endDate &&
+      endDate.getHours() === 0 &&
+      endDate.getMinutes() === 0
+    ) {
+      endDate.setHours(23, 59, 59, 999);
+    }
+
+    return { startDate, endDate };
+  }
+
+  private groupAndCalculateStats(exams: Exam[]): DepartmentStats[] {
+    const grouped = groupBy(exams, 'departmentId') as Record<string, Exam[]>;
+
+    return map(
+      grouped,
+      (deptExams: Exam[], departmentId: string): DepartmentStats => {
+        const totalExams = deptExams.length;
+        const statusCounts = countBy(deptExams, 'status');
+        const passedCount = sumBy(deptExams, (e) => (e.isPassed ? 1 : 0));
+        const failedCount = sumBy(deptExams, (e) =>
+          e.status === EXAM_SUBMISSION_STATUS.SUBMITTED && !e.isPassed ? 1 : 0,
+        );
+
+        return {
+          departmentId,
+          totalExams,
+          examSubmissionStatusCount: {
+            [EXAM_SUBMISSION_STATUS.IN_PROGRESS]:
+              statusCounts[EXAM_SUBMISSION_STATUS.IN_PROGRESS] || 0,
+            [EXAM_SUBMISSION_STATUS.SUBMITTED]:
+              statusCounts[EXAM_SUBMISSION_STATUS.SUBMITTED] || 0,
+            [EXAM_SUBMISSION_STATUS.ABANDONED]:
+              statusCounts[EXAM_SUBMISSION_STATUS.ABANDONED] || 0,
+            [EXAM_SUBMISSION_STATUS.TIMEOUT]:
+              statusCounts[EXAM_SUBMISSION_STATUS.TIMEOUT] || 0,
+          },
+          averageScore: (meanBy(deptExams, 'score') || 0).toFixed(2),
+          averagePercentage: (meanBy(deptExams, 'percentage') || 0).toFixed(2),
+          averageAccuracy: (meanBy(deptExams, 'accuracy') || 0).toFixed(2),
+          totalCorrectAnswers: sumBy(deptExams, 'correctAnswers'),
+          totalIncorrectAnswers: sumBy(deptExams, 'incorrectAnswers'),
+          totalAttemptedQuestions: sumBy(deptExams, 'attemptedQuestions'),
+          totalUnattemptedQuestions: sumBy(deptExams, 'unattemptedQuestions'),
+          passedCount,
+          failedCount,
+          passRate:
+            totalExams > 0
+              ? ((passedCount / totalExams) * 100).toFixed(2)
+              : '0.00',
+          //exams: deptExams,
+        };
+      },
+    );
   }
 }
