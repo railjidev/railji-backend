@@ -20,6 +20,12 @@ export const APP_CONSTANTS = {
     TIMEOUT: 'timeout',
   },
 
+  // Exam Mode
+  EXAM_MODE: {
+    MOCK: 'mock',
+    LIVE: 'live',
+  },
+
   // Paper Related
   PAPER_STATUS: {
     DRAFT: 'draft',
@@ -74,6 +80,7 @@ export const APP_CONSTANTS = {
 export const {
   API_PREFIX,
   EXAM_SUBMISSION_STATUS,
+  EXAM_MODE,
   PAPER_STATUS,
   QUESTION_TYPES,
   DEPARTMENTS,

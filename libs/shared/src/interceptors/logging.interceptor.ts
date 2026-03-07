@@ -37,15 +37,17 @@ export class LoggingInterceptor implements NestInterceptor {
 
         // Log only on development or for debugging
         if (process.env.NODE_ENV === 'development') {
-          this.logger.debug({
-            method,
-            url,
-            statusCode,
-            duration,
-            query,
-            params,
-            body: this.sanitizeBody(body),
-          });
+          this.logger.debug(
+            JSON.stringify({
+              method,
+              url,
+              statusCode,
+              duration,
+              query,
+              params,
+              //body: this.sanitizeBody(body),
+            }, null, 2)
+          );
         }
       }),
       catchError((error) => {

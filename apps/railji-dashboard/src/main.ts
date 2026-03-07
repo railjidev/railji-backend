@@ -5,7 +5,13 @@ import { LoggerServiceProvider } from '@libs';
 import { config } from './config/config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: true,
+  });
+
+  // Increase body size limit for large payloads
+  app.use(require('express').json({ limit: '12mb' }));
+  app.use(require('express').urlencoded({ limit: '12mb', extended: true }));
 
   // Setup Logger
   const loggerService = app.get(LoggerServiceProvider);
