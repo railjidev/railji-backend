@@ -21,9 +21,6 @@ export class User extends Document {
   @Prop()
   email?: string;
 
-  @Prop()
-  name?: string;
-
   @Prop({ default: Date.now })
   createdAt: Date;
 
