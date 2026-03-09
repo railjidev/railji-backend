@@ -13,7 +13,7 @@ export const APP_CONSTANTS = {
   DEFAULT_SORT_FIELD: 'createdAt',
 
   // Exam Submission Status (User Attempt Progress)
-  EXAM_SUBMISSION_STATUS: {
+  EXAM_STATUS: {
     IN_PROGRESS: 'in-progress',
     SUBMITTED: 'submitted',
     ABANDONED: 'abandoned',
@@ -79,7 +79,7 @@ export const APP_CONSTANTS = {
 // Export individual constants for convenience
 export const {
   API_PREFIX,
-  EXAM_SUBMISSION_STATUS,
+  EXAM_STATUS,
   EXAM_MODE,
   PAPER_STATUS,
   QUESTION_TYPES,

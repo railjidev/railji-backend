@@ -1,16 +1,17 @@
-import { EXAM_SUBMISSION_STATUS } from '../../../constants/app.constants';
+import { EXAM_STATUS } from '../../../constants/app.constants';
 
-export interface ExamSubmissionStatusCount {
-  [EXAM_SUBMISSION_STATUS.IN_PROGRESS]: number;
-  [EXAM_SUBMISSION_STATUS.SUBMITTED]: number;
-  [EXAM_SUBMISSION_STATUS.ABANDONED]: number;
-  [EXAM_SUBMISSION_STATUS.TIMEOUT]: number;
+export interface StatusCount {
+  [EXAM_STATUS.IN_PROGRESS]: number;
+  [EXAM_STATUS.SUBMITTED]: number;
+  [EXAM_STATUS.ABANDONED]: number;
+  [EXAM_STATUS.TIMEOUT]: number;
 }
 
-export interface DepartmentStats {
-  departmentId: string;
+export interface ExamStats {
+  departmentId?: string;
+  paperCode?: string;
   totalExams: number;
-  examSubmissionStatusCount: ExamSubmissionStatusCount;
+  statusCount: StatusCount;
   averageScore: string;
   averagePercentage: string;
   averageAccuracy: string;
@@ -18,10 +19,11 @@ export interface DepartmentStats {
   totalIncorrectAnswers: number;
   totalAttemptedQuestions: number;
   totalUnattemptedQuestions: number;
+  totalTimeTaken: { hours: number; minutes: number; seconds: number };
   passedCount: number;
   failedCount: number;
   passRate: string;
-  exams?: any[];
+  //exams?: any[];
 }
 
 export interface DateRange {
@@ -42,5 +44,5 @@ export interface ExamsByUserIdResponse {
     startDate: string;
     endDate: string;
   };
-  departments: DepartmentStats[];
+  departments: ExamStats[];
 }

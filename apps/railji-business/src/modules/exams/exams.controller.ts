@@ -52,8 +52,8 @@ export class ExamsController {
     };
   }
 
-  // GET /exams/user/:userId - Fetch all exams by userId
-  @Get('user/:userId')
+  // GET /exams/stats/:userId - Fetch exam statistics by userId
+  @Get('stats/:userId')
   @HttpCode(HttpStatus.OK)
   async getExamsByUserId(
     @Param('userId') userId: string,
@@ -61,7 +61,7 @@ export class ExamsController {
   ) {
     const result = await this.examsService.fetchExamsByUserId(userId, query);
     return {
-      message: 'Exams fetched successfully',
+      message: 'Exam statistics fetched successfully',
       data: result,
     };
   }

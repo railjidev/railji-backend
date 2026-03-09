@@ -12,12 +12,12 @@ import { Exam } from './schemas/exam.schema';
 import { SubmitExamDto, StartExamDto } from './dto/exam.dto';
 import { PapersService } from '../papers/papers.service';
 import { ErrorHandlerService } from '@railji/shared';
-import { EXAM_SUBMISSION_STATUS } from '../../constants/app.constants';
+import { EXAM_STATUS } from '../../constants/app.constants';
 import {
-  DepartmentStats,
   DateRange,
   ExamQueryParams,
   ExamsByUserIdResponse,
+  ExamStats,
 } from './interfaces/exam.interface';
 
 @Injectable()
@@ -45,7 +45,7 @@ export class ExamsService {
         paperId,
         departmentId,
         responses: [],
-        status: EXAM_SUBMISSION_STATUS.IN_PROGRESS,
+        status: EXAM_STATUS.IN_PROGRESS,
         startTime: new Date(),
         deviceInfo: {
           device: 'Unknown',
@@ -88,7 +88,7 @@ export class ExamsService {
         throw new NotFoundException(`Paper with ID ${paperId} not found`);
       }
 
-      if (exam.status !== EXAM_SUBMISSION_STATUS.IN_PROGRESS) {
+      if (exam.status !== EXAM_STATUS.IN_PROGRESS) {
         throw new BadRequestException(
           `Exam ${examId} is already ${exam.status}`,
         );
@@ -156,7 +156,7 @@ export class ExamsService {
       exam.percentage = percentage;
       exam.accuracy = accuracy;
       exam.endTime = new Date();
-      exam.status = EXAM_SUBMISSION_STATUS.SUBMITTED;
+      exam.status = EXAM_STATUS.SUBMITTED;
       exam.isPassed = isPassed;
       exam.remarks = remarks;
 
@@ -250,16 +250,15 @@ export class ExamsService {
         );
       }
 
-      const departmentData = this.groupAndCalculateStats(exams);
-
+      const departmentstats = this.departmentStats(exams);
       return {
         totalExams: exams.length,
-        totalDepartments: departmentData.length,
+        totalDepartments: departmentstats.length,
         dateRange: {
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
         },
-        departments: departmentData,
+        departments: departmentstats,
       };
     } catch (error) {
       this.errorHandler.handle(error, {
@@ -298,48 +297,53 @@ export class ExamsService {
     return { startDate, endDate };
   }
 
-  private groupAndCalculateStats(exams: Exam[]): DepartmentStats[] {
-    const grouped = groupBy(exams, 'departmentId') as Record<string, Exam[]>;
+  private departmentStats(exams: Exam[]): ExamStats[] {
+    return map(groupBy(exams, 'departmentId'), (deptExams, departmentId) => ({
+      departmentId,
+      ...this.calculateStats(deptExams),
+      sectionCodeStats: this.paperCodeStats(deptExams),
+    }));
+  }
 
-    return map(
-      grouped,
-      (deptExams: Exam[], departmentId: string): DepartmentStats => {
-        const totalExams = deptExams.length;
-        const statusCounts = countBy(deptExams, 'status');
-        const passedCount = sumBy(deptExams, (e) => (e.isPassed ? 1 : 0));
-        const failedCount = sumBy(deptExams, (e) =>
-          e.status === EXAM_SUBMISSION_STATUS.SUBMITTED && !e.isPassed ? 1 : 0,
-        );
+  private paperCodeStats(exams: Exam[]): ExamStats[] {
+    return map(groupBy(exams, 'paperCode'), (paperExams, paperCode) => ({
+      paperCode,
+      ...this.calculateStats(paperExams),
+    }));
+  }
 
-        return {
-          departmentId,
-          totalExams,
-          examSubmissionStatusCount: {
-            [EXAM_SUBMISSION_STATUS.IN_PROGRESS]:
-              statusCounts[EXAM_SUBMISSION_STATUS.IN_PROGRESS] || 0,
-            [EXAM_SUBMISSION_STATUS.SUBMITTED]:
-              statusCounts[EXAM_SUBMISSION_STATUS.SUBMITTED] || 0,
-            [EXAM_SUBMISSION_STATUS.ABANDONED]:
-              statusCounts[EXAM_SUBMISSION_STATUS.ABANDONED] || 0,
-            [EXAM_SUBMISSION_STATUS.TIMEOUT]:
-              statusCounts[EXAM_SUBMISSION_STATUS.TIMEOUT] || 0,
-          },
-          averageScore: (meanBy(deptExams, 'score') || 0).toFixed(2),
-          averagePercentage: (meanBy(deptExams, 'percentage') || 0).toFixed(2),
-          averageAccuracy: (meanBy(deptExams, 'accuracy') || 0).toFixed(2),
-          totalCorrectAnswers: sumBy(deptExams, 'correctAnswers'),
-          totalIncorrectAnswers: sumBy(deptExams, 'incorrectAnswers'),
-          totalAttemptedQuestions: sumBy(deptExams, 'attemptedQuestions'),
-          totalUnattemptedQuestions: sumBy(deptExams, 'unattemptedQuestions'),
-          passedCount,
-          failedCount,
-          passRate:
-            totalExams > 0
-              ? ((passedCount / totalExams) * 100).toFixed(2)
-              : '0.00',
-          //exams: deptExams,
-        };
-      },
+  private calculateStats(exams: Exam[]) {
+    const totalExams = exams.length;
+    const statusCounts = countBy(exams, 'status');
+    const passedCount = sumBy(exams, (e) => (e.isPassed ? 1 : 0));
+    const failedCount = sumBy(exams, (e) =>
+      e.status === EXAM_STATUS.SUBMITTED && !e.isPassed ? 1 : 0,
     );
+
+    return {
+      totalExams,
+      statusCount: {
+        [EXAM_STATUS.IN_PROGRESS]: statusCounts[EXAM_STATUS.IN_PROGRESS] || 0,
+        [EXAM_STATUS.SUBMITTED]: statusCounts[EXAM_STATUS.SUBMITTED] || 0,
+        [EXAM_STATUS.ABANDONED]: statusCounts[EXAM_STATUS.ABANDONED] || 0,
+        [EXAM_STATUS.TIMEOUT]: statusCounts[EXAM_STATUS.TIMEOUT] || 0,
+      },
+      averageScore: (meanBy(exams, 'score') || 0).toFixed(2),
+      averagePercentage: (meanBy(exams, 'percentage') || 0).toFixed(2),
+      averageAccuracy: (meanBy(exams, 'accuracy') || 0).toFixed(2),
+      totalCorrectAnswers: sumBy(exams, 'correctAnswers'),
+      totalIncorrectAnswers: sumBy(exams, 'incorrectAnswers'),
+      totalAttemptedQuestions: sumBy(exams, 'attemptedQuestions'),
+      totalUnattemptedQuestions: sumBy(exams, 'unattemptedQuestions'),
+      totalTimeTaken: {
+        hours: sumBy(exams, (e) => e.timeTaken?.hours || 0),
+        minutes: sumBy(exams, (e) => e.timeTaken?.minutes || 0),
+        seconds: sumBy(exams, (e) => e.timeTaken?.seconds || 0),
+      },
+      passedCount,
+      failedCount,
+      passRate:
+        totalExams > 0 ? ((passedCount / totalExams) * 100).toFixed(2) : '0.00',
+    };
   }
 }
