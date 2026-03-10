@@ -9,11 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ExamsService } from './exams.service';
-import {
-  SubmitExamDto,
-  StartExamDto,
-  GetExamsByUserIdDto,
-} from './dto/exam.dto';
+import { SubmitExamDto, StartExamDto, GetExamStatsDto } from './dto/exam.dto';
 
 @Controller('exams')
 export class ExamsController {
@@ -55,14 +51,46 @@ export class ExamsController {
   // GET /exams/stats/:userId - Fetch exam statistics by userId
   @Get('stats/:userId')
   @HttpCode(HttpStatus.OK)
-  async getExamsByUserId(
+  async getExamStats(
     @Param('userId') userId: string,
-    @Query() query: GetExamsByUserIdDto,
+    @Query() query: GetExamStatsDto,
   ) {
-    const result = await this.examsService.fetchExamsByUserId(userId, query);
+    const result = await this.examsService.fetchExamStatsForUserId(
+      userId,
+      query,
+    );
     return {
       message: 'Exam statistics fetched successfully',
       data: result,
+    };
+  }
+
+  // GET /exams/history/:userId - Fetch exam history by userId
+  @Get('history/:userId')
+  @HttpCode(HttpStatus.OK)
+  async getExamHistory(
+    @Param('userId') userId: string,
+    @Query() query: GetExamStatsDto,
+  ) {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const result = await this.examsService.fetchExamHistoryForUserId(
+      userId,
+      page,
+      limit,
+    );
+
+    return {
+      message: 'Exam history fetched successfully',
+      data: {
+        exams: result.exams,
+        pagination: {
+          page: result.page,
+          limit,
+          total: result.total,
+          totalPages: result.totalPages,
+        },
+      },
     };
   }
 }

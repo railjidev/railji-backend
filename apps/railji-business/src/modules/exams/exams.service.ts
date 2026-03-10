@@ -9,16 +9,16 @@ import { Model } from 'mongoose';
 import { randomUUID } from 'crypto';
 import { groupBy, map, meanBy, sumBy, countBy } from 'lodash';
 import { Exam } from './schemas/exam.schema';
-import { SubmitExamDto, StartExamDto } from './dto/exam.dto';
+import {
+  SubmitExamDto,
+  StartExamDto,
+  GetExamHistoryDto,
+  GetExamStatsDto,
+} from './dto/exam.dto';
 import { PapersService } from '../papers/papers.service';
 import { ErrorHandlerService } from '@railji/shared';
 import { EXAM_STATUS } from '../../constants/app.constants';
-import {
-  DateRange,
-  ExamQueryParams,
-  ExamsByUserIdResponse,
-  ExamStats,
-} from './interfaces/exam.interface';
+import { ExamStats } from './interfaces/exam.interface';
 
 @Injectable()
 export class ExamsService {
@@ -218,11 +218,11 @@ export class ExamsService {
     }
   }
 
-  // Get all exams by userId
-  async fetchExamsByUserId(
+  // Get exam stats by userId
+  async fetchExamStatsForUserId(
     userId: string,
-    query?: ExamQueryParams,
-  ): Promise<ExamsByUserIdResponse> {
+    query?: GetExamStatsDto,
+  ): Promise<any> {
     try {
       const { startDate, endDate } = this.getDateRange(query);
       const filter: Record<string, any> = {
@@ -267,7 +267,7 @@ export class ExamsService {
     }
   }
 
-  private getDateRange(query?: ExamQueryParams): DateRange {
+  private getDateRange(query?: GetExamHistoryDto) {
     const now = new Date();
     const defaultStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
     const defaultEndDate = new Date(
@@ -301,7 +301,7 @@ export class ExamsService {
     return map(groupBy(exams, 'departmentId'), (deptExams, departmentId) => ({
       departmentId,
       ...this.calculateStats(deptExams),
-      sectionCodeStats: this.paperCodeStats(deptExams),
+      paperCodeStats: this.paperCodeStats(deptExams),
     }));
   }
 
@@ -345,5 +345,49 @@ export class ExamsService {
       passRate:
         totalExams > 0 ? ((passedCount / totalExams) * 100).toFixed(2) : '0.00',
     };
+  }
+
+  async fetchExamHistoryForUserId(
+    userId: string,
+    page: number,
+    limit: number,
+    query: GetExamHistoryDto = {},
+  ): Promise<any> {
+    try {
+      const { startDate, endDate } = this.getDateRange(query);
+      const filter: Record<string, any> = {
+        userId,
+        createdAt: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      };
+
+      //Todo: Add filters if needed
+      const { page: _, limit: __ } = query || {};
+      const skip = (page - 1) * limit;
+
+      const [exams, total] = await Promise.all([
+        this.examModel
+          .find(filter)
+          .select('-responses')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .exec(),
+        this.examModel.countDocuments(filter).exec(),
+      ]);
+      const totalPages = Math.ceil(total / limit);
+      return {
+        exams,
+        total,
+        page,
+        totalPages,
+      };
+    } catch (error) {
+      this.errorHandler.handle(error, {
+        context: 'ExamsService.fetchExamHistoryForUserId',
+      });
+    }
   }
 }

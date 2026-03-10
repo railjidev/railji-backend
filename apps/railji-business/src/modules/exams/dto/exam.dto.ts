@@ -6,6 +6,7 @@ import {
   IsArray,
   ValidateNested,
   IsNotEmpty,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -94,7 +95,7 @@ export class StartExamDto {
   departmentId: string;
 }
 
-export class GetExamsByUserIdDto {
+export class GetExamStatsDto {
   @IsOptional()
   @IsString()
   startDate?: string;
@@ -106,4 +107,36 @@ export class GetExamsByUserIdDto {
   @IsOptional()
   @IsString()
   departmentId?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  limit?: number;
+}
+
+export class GetExamHistoryDto {
+  @IsOptional()
+  @IsString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsString()
+  endDate?: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  page?: number = 1;
+
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  limit?: number = 10;
 }
