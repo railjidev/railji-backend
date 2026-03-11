@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { nanoid } from 'nanoid';
-import { Paper, QuestionBank } from '@railji/shared';
+import { Paper, QuestionBank, buildDateFilter } from '@railji/shared';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
 import { ErrorHandlerService } from '@railji/shared';
@@ -129,16 +129,36 @@ export class PapersService {
     }
   }
 
-  async getPaperLogs(): Promise<any> {
+  async getDashboardStats(startDate?: string, endDate?: string): Promise<any> {
     try {
-      const logs = await this.auditLogModel
-        .find()
-        .sort({ createdAt: -1 })
-        .exec();
-      return logs;
+      const dateFilter = buildDateFilter(startDate, endDate);
+
+      const [recentActivity, userUploadCount] = await Promise.all([
+        this.auditLogModel
+          .find(dateFilter)
+          .sort({ createdAt: -1 })
+          .lean()
+          .exec(),
+        this.paperModel.aggregate([
+          {
+            $group: {
+              _id: '$createdBy',
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $sort: { count: -1 },
+          },
+        ]),
+      ]);
+
+      return {
+        recentActivity,
+        userUploadCount,
+      };
     } catch (error) {
       this.errorHandler.handle(error, {
-        context: 'PapersService.getPaperLogs',
+        context: 'PapersService.getDashboardStats',
       });
     }
   }

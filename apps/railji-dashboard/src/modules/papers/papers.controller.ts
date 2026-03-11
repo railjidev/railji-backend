@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   HttpStatus,
   HttpCode,
   Get,
@@ -55,10 +56,13 @@ export class PapersController {
     };
   }
 
-  @Get('logs')
+  @Get('stats')
   @HttpCode(HttpStatus.OK)
-  async getPaperLogs() {
-    const result = await this.papersService.getPaperLogs();
+  async getDashboardStats(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const result = await this.papersService.getDashboardStats(startDate, endDate);
     return {
       message: 'Paper logs retrieved successfully',
       data: result,
