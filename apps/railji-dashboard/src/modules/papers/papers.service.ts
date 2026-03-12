@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { nanoid } from 'nanoid';
-import { Paper, QuestionBank, buildDateFilter } from '@railji/shared';
+import { Paper, QuestionBank, buildDateFilter, User } from '@railji/shared';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
 import { ErrorHandlerService } from '@railji/shared';
@@ -17,6 +17,7 @@ export class PapersService {
     @InjectModel(QuestionBank.name)
     private questionBankModel: Model<QuestionBank>,
     @InjectModel(AuditLog.name) private auditLogModel: Model<AuditLog>,
+    @InjectModel(User.name) private userModel: Model<User>,
     private errorHandler: ErrorHandlerService,
   ) {}
 
@@ -133,28 +134,39 @@ export class PapersService {
     try {
       const dateFilter = buildDateFilter(startDate, endDate);
 
-      const [recentActivity, userUploadCount] = await Promise.all([
-        this.auditLogModel
-          .find(dateFilter)
-          .sort({ createdAt: -1 })
-          .lean()
-          .exec(),
-        this.paperModel.aggregate([
-          {
-            $group: {
-              _id: '$createdBy',
-              count: { $sum: 1 },
+      const [recentActivity, _paperUploadCount, totalPapers, totalUsers] =
+        await Promise.all([
+          this.auditLogModel
+            .find(dateFilter)
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec(),
+          this.paperModel.aggregate([
+            {
+              $group: {
+                _id: '$createdBy',
+                count: { $sum: 1 },
+              },
             },
-          },
-          {
-            $sort: { count: -1 },
-          },
-        ]),
-      ]);
+            {
+              $sort: { count: -1 },
+            },
+          ]),
+          this.paperModel.countDocuments().exec(),
+          this.userModel.countDocuments().exec(),
+        ]);
+
+      // Transform _paperUploadCount to {username: count} format
+      const paperUploadCount = _paperUploadCount.reduce((acc, item) => {
+        acc[item._id] = item.count;
+        return acc;
+      }, {});
 
       return {
         recentActivity,
-        userUploadCount,
+        paperUploadCount,
+        totalPapers,
+        totalUsers,
       };
     } catch (error) {
       this.errorHandler.handle(error, {

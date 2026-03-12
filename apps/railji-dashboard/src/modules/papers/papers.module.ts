@@ -7,6 +7,8 @@ import {
   PaperSchema,
   QuestionBank,
   QuestionBankSchema,
+  User,
+  UserSchema,
 } from '@railji/shared';
 import { SharedCommonModule } from '@railji/shared';
 import { AuditLog, AuditLogSchema } from './schemas/audit-log.schema';
@@ -17,6 +19,7 @@ import { AuditLog, AuditLogSchema } from './schemas/audit-log.schema';
       { name: Paper.name, schema: PaperSchema },
       { name: QuestionBank.name, schema: QuestionBankSchema },
       { name: AuditLog.name, schema: AuditLogSchema },
+      { name: User.name, schema: UserSchema },
     ]),
     SharedCommonModule,
   ],
