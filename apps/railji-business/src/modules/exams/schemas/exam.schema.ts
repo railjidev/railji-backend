@@ -52,10 +52,13 @@ export class Exam extends Document {
   paperId: string;
 
   @Prop()
-  paperCode: string;
+  paperName: string;
 
   @Prop()
-  paperName: string;
+  paperCode: string;
+
+  @Prop({ enum: ['general', 'sectional', 'full'] })
+  paperType: string;
 
   @Prop({ required: true })
   departmentId: string;
