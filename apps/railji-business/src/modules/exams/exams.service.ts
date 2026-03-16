@@ -144,6 +144,7 @@ export class ExamsService {
 
       // Update exam record
       exam.paperName = paper.name;
+      exam.paperCode = paper.paperCode
       exam.responses = responses;
       exam.totalQuestions = paper.totalQuestions;
       exam.attemptedQuestions = attemptedQuestions;
