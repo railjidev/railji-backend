@@ -33,7 +33,10 @@ export class DepartmentsService {
       }
 
       // Fetch from database
-      const departments = await this.departmentModel.find(query || {}).exec();
+      const departments = await this.departmentModel
+        .find(query || {})
+        .sort({ departmentName: 1 })
+        .exec();
 
       if (!departments || departments.length === 0) {
         throw new NotFoundException('No departments found');
@@ -48,11 +51,16 @@ export class DepartmentsService {
       this.logger.log(`Found ${departments.length} departments`);
       return departments;
     } catch (error) {
-      this.errorHandler.handle(error, { context: 'DepartmentsService.fetchAllDepartments' });
+      this.errorHandler.handle(error, {
+        context: 'DepartmentsService.fetchAllDepartments',
+      });
     }
   }
 
-  async fetchMaterialsByDepartment(departmentId: string, query?: any): Promise<Material[]> {
+  async fetchMaterialsByDepartment(
+    departmentId: string,
+    query?: any,
+  ): Promise<Material[]> {
     try {
       const cacheKey = `materials_${departmentId}`;
 
@@ -60,7 +68,9 @@ export class DepartmentsService {
       const cached = this.cacheService.get<Material[]>(cacheKey);
 
       if (cached) {
-        this.logger.debug(`Returning cached materials data for department ${departmentId}`);
+        this.logger.debug(
+          `Returning cached materials data for department ${departmentId}`,
+        );
         return cached;
       }
 
@@ -71,7 +81,9 @@ export class DepartmentsService {
       const materials = await this.materialModel.find(filter).exec();
 
       if (!materials || materials.length === 0) {
-        throw new NotFoundException(`No materials found for department ${departmentId}`);
+        throw new NotFoundException(
+          `No materials found for department ${departmentId}`,
+        );
       }
 
       // Cache the result
@@ -80,10 +92,14 @@ export class DepartmentsService {
         `Cached materials data for department ${departmentId} with ${materials.length} materials`,
       );
 
-      this.logger.log(`Found ${materials.length} materials for department ${departmentId}`);
+      this.logger.log(
+        `Found ${materials.length} materials for department ${departmentId}`,
+      );
       return materials;
     } catch (error) {
-      this.errorHandler.handle(error, { context: 'DepartmentsService.fetchMaterialsByDepartment' });
+      this.errorHandler.handle(error, {
+        context: 'DepartmentsService.fetchMaterialsByDepartment',
+      });
     }
   }
 }
