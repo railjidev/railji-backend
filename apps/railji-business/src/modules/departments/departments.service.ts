@@ -35,7 +35,7 @@ export class DepartmentsService {
       // Fetch from database
       const departments = await this.departmentModel
         .find(query || {})
-        .sort({ departmentName: 1 })
+        .sort({ departmentId: 1 })
         .exec();
 
       if (!departments || departments.length === 0) {
