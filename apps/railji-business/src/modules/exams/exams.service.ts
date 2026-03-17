@@ -194,9 +194,11 @@ export class ExamsService {
         negativeMarking: negativeMarkingPenalty,
         submittedAt: exam.endTime,
       };
+      
+      await exam.save();
 
       // Handle exam mode logic
-      if (exam.examMode === 'live') {
+      /* if (exam.examMode === 'live') {
         // Save exam data for live exams
         await exam.save();
         this.logger.log(
@@ -208,7 +210,7 @@ export class ExamsService {
         this.logger.log(
           `Mock exam submitted and deleted successfully. Score: ${score}/${maxScore} (${percentage.toFixed(2)}%)`,
         );
-      }
+      } */
 
       return responseData;
     } catch (error) {
@@ -242,6 +244,7 @@ export class ExamsService {
       const dateFilter = buildDateFilter(query.startDate, query.endDate);
       const filter: Record<string, any> = {
         userId,
+        examMode: 'live',
         ...dateFilter,
       };
 
