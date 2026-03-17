@@ -33,7 +33,7 @@ export class ExamsService {
   // Start exam session
   async startExam(startExamDto: StartExamDto): Promise<any> {
     try {
-      const { userId, paperId, departmentId } = startExamDto;
+      const { userId, paperId, departmentId, examMode } = startExamDto;
 
       // Generate unique attempt ID
       const examId = randomUUID();
@@ -44,6 +44,7 @@ export class ExamsService {
         userId,
         paperId,
         departmentId,
+        examMode,
         responses: [],
         status: EXAM_STATUS.IN_PROGRESS,
         startTime: new Date(),
