@@ -1,8 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { nanoid } from 'nanoid';
-import { Paper, QuestionBank, buildDateFilter, User } from '@railji/shared';
+import { Paper, QuestionBank, buildDateFilter, User, generatePaperId } from '@railji/shared';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
 import { ErrorHandlerService } from '@railji/shared';
@@ -23,7 +22,7 @@ export class PapersService {
 
   async createPaper(createPaperDto: CreatePaperDto): Promise<any> {
     try {
-      const paperId = `paper-${nanoid(6)}`;
+      const paperId = generatePaperId();
 
       // Extract questions and username from DTO
       const { questions, username, ...paperData } = createPaperDto;

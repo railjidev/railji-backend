@@ -49,6 +49,16 @@ export {
   getLastMonthsRange,
   DateRange,
 } from './utils/date.utils';
+export {
+  generateId,
+  generateCustomId,
+  generateUrlSafeId,
+  generatePaperId,
+  generateUserId,
+  generateExamId,
+  generateDepartmentId,
+  generatePrefixedId,
+} from './utils/uuid.utils';
 
 // Module
 export { SharedCommonModule } from './common/shared-common.module';

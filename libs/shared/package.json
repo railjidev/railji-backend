@@ -8,5 +8,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc"
+  },
+  "dependencies": {
+    "nanoid": "^5.0.0"
   }
 }

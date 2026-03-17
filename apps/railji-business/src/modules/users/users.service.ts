@@ -1,8 +1,7 @@
 import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { nanoid } from 'nanoid';
-import { User } from '@libs';
+import { User, generateUserId } from '@libs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CacheService, ErrorHandlerService } from '@railji/shared';
 
@@ -33,7 +32,7 @@ export class UsersService {
       }
 
       // Generate nanoId for userId
-      const userId = nanoid();
+      const userId = generateUserId();
 
       const newUser = new this.userModel({
         userId,

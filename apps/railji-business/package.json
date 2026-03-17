@@ -21,9 +21,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.0"
   }
 }

@@ -21,6 +21,5 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "nanoid": "^5.1.6"
   }
 }
