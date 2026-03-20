@@ -263,12 +263,24 @@ export class ExamsService {
         throw new NotFoundException(`No exams found for user ${userId}`);
       }
 
-      const departmentstats = this.departmentStats(exams);
-      return {
+      // Separate exams by paper type
+      const generalExams = exams.filter(exam => exam.paperType === 'general');
+      const nonGeneralExams = exams.filter(exam => exam.paperType === 'full' || exam.paperType === 'sectional');
+
+      const departmentstats = this.departmentStats(nonGeneralExams);
+      
+      const result: any = {
         totalExams: exams.length,
         totalDepartments: departmentstats.length,
-        departments: departmentstats,
+        departmentExams: departmentstats,
       };
+
+      // Add paperCodeStats at root level for general paper type
+      if (generalExams.length > 0) {
+        result.generalExams = this.paperCodeStats(generalExams);
+      }
+
+      return result;
     } catch (error) {
       this.errorHandler.handle(error, {
         context: 'ExamsService.fetchExamsByUserId',
@@ -277,11 +289,23 @@ export class ExamsService {
   }
 
   private departmentStats(exams: Exam[]): ExamStats[] {
-    return map(groupBy(exams, 'departmentId'), (deptExams, departmentId) => ({
-      departmentId,
-      ...this.calculateStats(deptExams),
-      paperCodeStats: this.paperCodeStats(deptExams),
-    }));
+    return map(groupBy(exams, 'departmentId'), (deptExams, departmentId) => {
+      const stats: any = {
+        departmentId,
+        ...this.calculateStats(deptExams),
+      };
+
+      // Only add paperCodeStats for full or sectional paper types
+      const nonGeneralExams = deptExams.filter(exam => 
+        exam.paperType === 'full' || exam.paperType === 'sectional'
+      );
+      
+      if (nonGeneralExams.length > 0) {
+        stats.paperCodeStats = this.paperCodeStats(nonGeneralExams);
+      }
+
+      return stats;
+    });
   }
 
   private paperCodeStats(exams: Exam[]): ExamStats[] {
