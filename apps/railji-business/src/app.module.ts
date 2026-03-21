@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+import { AuthModule } from './modules/auth/auth.module';
 import { ExamsModule } from './modules/exams/exams.module';
 import { PapersModule } from './modules/papers/papers.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
@@ -21,6 +22,7 @@ import { AppService } from './app.service';
   imports: [
     MongooseModule.forRoot(config.database.uri),
     SharedCommonModule,
+    AuthModule,
     ExamsModule,
     PapersModule,
     DepartmentsModule,

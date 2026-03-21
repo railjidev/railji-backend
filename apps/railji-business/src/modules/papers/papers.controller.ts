@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PapersService } from './papers.service';
 import { FetchPapersQueryDto } from './dto/paper.dto';
+import { Public } from '../auth';
 
 @Controller('papers')
 export class PapersController {
@@ -23,6 +24,7 @@ export class PapersController {
     };
   }
 
+  @Public()
   @Get('top')
   @HttpCode(HttpStatus.OK)
   async getTopPapers() {
@@ -72,6 +74,7 @@ export class PapersController {
     };
   }
 
+  @Public()
   @Get(':departmentId/:paperId')
   @HttpCode(HttpStatus.OK)
   async fetchQuestionsForDepartmentPaper(
