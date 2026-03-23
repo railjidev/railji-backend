@@ -28,8 +28,12 @@ export class UsersService {
       });
 
       if (existingUser) {
-        this.logger.log(`User already exists with userId: ${existingUser.userId}`);
-        return { user: existingUser, created: false };
+        // Update lastLoggedIn for existing user
+        existingUser.lastLoggedIn = new Date();
+        const updatedUser = await existingUser.save();
+        
+        this.logger.log(`User already exists with userId: ${existingUser.userId}, updated lastLoggedIn`);
+        return { user: updatedUser, created: false };
       }
 
       // Generate nanoId for userId
@@ -38,6 +42,7 @@ export class UsersService {
       const newUser = new this.userModel({
         userId,
         ...createUserDto,
+        lastLoggedIn: new Date(),
       });
 
       const savedUser = await newUser.save();
@@ -130,6 +135,29 @@ export class UsersService {
       return user;
     } catch (error) {
       this.errorHandler.handle(error, { context: 'UsersService.findUserBySupabaseId' });
+    }
+  }
+
+  async updateLastLoggedIn(userId: string): Promise<User> {
+    try {
+      const user = await this.userModel.findOneAndUpdate(
+        { userId },
+        { lastLoggedIn: new Date() },
+        { new: true }
+      ).exec();
+
+      if (!user) {
+        throw new NotFoundException(`User with userId ${userId} not found`);
+      }
+
+      // Invalidate cache for this user
+      const cacheKey = `user_${userId}`;
+      this.cacheService.delete(cacheKey);
+
+      this.logger.log(`Updated lastLoggedIn for user with userId: ${userId}`);
+      return user;
+    } catch (error) {
+      this.errorHandler.handle(error, { context: 'UsersService.updateLastLoggedIn' });
     }
   }
 }
