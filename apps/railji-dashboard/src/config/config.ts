@@ -12,6 +12,11 @@ export const config = {
   database: {
     uri: process.env.MONGODB_URI,
   },
+  supabase: {
+    url: process.env.SUPABASE_URL,
+    anonKey: process.env.SUPABASE_ANON_KEY,
+    jwtAudience: process.env.SUPABASE_JWT_AUDIENCE || 'authenticated',
+  },
   jwt: {
     secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
     expiresIn: process.env.JWT_EXPIRATION || '7d',

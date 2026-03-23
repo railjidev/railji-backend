@@ -1,17 +1,26 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, ErrorHandlerService } from '@railji/shared';
+import { User, ErrorHandlerService, generateUserId } from '@railji/shared';
 import { calculateSkip, pagination } from '@railji/shared';
+import { createClient } from '@supabase/supabase-js';
+import { config } from '../../config/config';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
+  private supabase;
 
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private errorHandler: ErrorHandlerService,
-  ) {}
+  ) {
+    // Initialize Supabase client
+    this.supabase = createClient(
+      config.supabase.url,
+      config.supabase.anonKey
+    );
+  }
 
   async findAll(page: number = 1, limit: number = 10) {
     try {
@@ -75,4 +84,54 @@ export class UsersService {
       });
     }
   }
+
+  async login({ email, password }: { email: string; password: string }): Promise<{ user: User; accessToken: string }> {
+    try {
+      // Authenticate with Supabase
+      const { data: authData, error: authError } = await this.supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        this.logger.warn(`Authentication failed for email: ${email}`, authError.message);
+        throw new UnauthorizedException('Invalid email or password');
+      }
+
+      if (!authData.user) {
+        throw new UnauthorizedException('Authentication failed');
+      }
+
+      const supabaseId = authData.user.id;
+      const userEmail = authData.user.email;
+
+      // Check if user exists in our database
+      const existingUser = await this.userModel.findOne({
+        $or: [
+          { email: userEmail },
+          { supabaseId },
+        ],
+      });
+
+      if (!existingUser) {
+        this.logger.warn(`User not found in database for email: ${userEmail}`);
+        throw new UnauthorizedException('User not authorized for dashboard access');
+      }
+
+      // Update lastLoggedIn for existing user
+      existingUser.lastLoggedIn = new Date();
+      existingUser.supabaseId = supabaseId; // Ensure supabaseId is updated
+      const updatedUser = await existingUser.save();
+      
+      this.logger.log(`User logged in with userId: ${existingUser.userId}, updated lastLoggedIn`);
+      
+      return { 
+        user: updatedUser, 
+        accessToken: authData.session.access_token
+      };
+    } catch (error) {
+      this.errorHandler.handle(error, { context: 'UsersService.login' });
+    }
+  }
+
 }

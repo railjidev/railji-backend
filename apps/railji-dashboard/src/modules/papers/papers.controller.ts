@@ -9,12 +9,15 @@ import {
   HttpStatus,
   HttpCode,
   Get,
+  UseGuards,
 } from '@nestjs/common';
 import { PapersService } from './papers.service';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
+import { JwtAuthGuard, CurrentUser } from '@libs';
 
 @Controller('papers')
+@UseGuards(JwtAuthGuard)
 export class PapersController {
   constructor(private readonly papersService: PapersService) {}
 

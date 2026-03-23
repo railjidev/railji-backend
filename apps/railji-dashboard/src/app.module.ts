@@ -9,17 +9,20 @@ import {
   ResponseInterceptor,
   ErrorInterceptor,
   HttpExceptionFilter,
+  AuthModule,
 } from '@libs';
 import { config } from './config/config';
 import { PapersModule } from './modules/papers/papers.module';
-import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
     MongooseModule.forRoot(config.database.uri),
     SharedCommonModule,
-    AuthModule,
+    AuthModule.forRoot({
+      url: config.supabase.url,
+      jwtAudience: config.supabase.jwtAudience,
+    }),
     PapersModule,
     UsersModule,
   ],

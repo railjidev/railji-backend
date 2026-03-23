@@ -1,16 +1,21 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Param,
   Query,
   HttpStatus,
   HttpCode,
+  UseGuards,
+  Body,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { paginate } from '@railji/shared';
+import { Public, JwtAuthGuard } from '@libs';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -35,6 +40,17 @@ export class UsersController {
     return {
       message: 'User status updated successfully',
       data: result,
+    };
+  }
+
+  @Public()
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() { email, password }: { email: string; password: string }) {
+    const result = await this.usersService.login({ email, password });
+    return {
+      message: 'Login successful',
+      data: result
     };
   }
 }
