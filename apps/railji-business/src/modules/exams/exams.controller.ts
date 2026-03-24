@@ -11,6 +11,8 @@ import {
 import { ExamsService } from './exams.service';
 import { SubmitExamDto, StartExamDto, GetExamStatsDto } from './dto/exam.dto';
 import { paginate } from '@railji/shared';
+import { Public } from '@libs';
+
 
 @Controller('exams')
 export class ExamsController {
@@ -50,6 +52,7 @@ export class ExamsController {
   }
 
   // GET /exams/stats/:userId - Fetch exam statistics by userId
+  @Public()
   @Get('stats/:userId')
   @HttpCode(HttpStatus.OK)
   async getExamStats(
@@ -67,6 +70,7 @@ export class ExamsController {
   }
 
   // GET /exams/history/:userId - Fetch exam history by userId
+  @Public()
   @Get('history/:userId')
   @HttpCode(HttpStatus.OK)
   async getExamHistory(
