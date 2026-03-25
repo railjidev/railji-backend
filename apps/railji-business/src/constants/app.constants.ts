@@ -16,7 +16,6 @@ export const APP_CONSTANTS = {
   EXAM_STATUS: {
     IN_PROGRESS: 'in-progress',
     SUBMITTED: 'submitted',
-    ABANDONED: 'abandoned',
     TIMEOUT: 'timeout',
   },
 
@@ -66,13 +65,21 @@ export const APP_CONSTANTS = {
   },
 
   DEPARTMENTS: [
-    'DEPT001',
-    'DEPT002',
-    'DEPT003',
-    'DEPT004',
-    'DEPT005',
-    'DEPT006',
-    'DEPT007',
+    'civil',
+    'commercial',
+    'electrical',
+    'mechanical',
+    'operating',
+    'others',
+    'personnel',
+    'signal-telecom',
+  ],
+
+  // Authentication Exclusions (routes that don't require JWT authentication)
+  AUTH_EXCLUDED_ROUTES: [
+    '/business/v1/papers/top',
+    '/business/v1/departments',
+    '/business/v1/departments/:departmentId',
   ],
 } as const;
 
@@ -84,4 +91,5 @@ export const {
   PAPER_STATUS,
   QUESTION_TYPES,
   DEPARTMENTS,
+  AUTH_EXCLUDED_ROUTES,
 } = APP_CONSTANTS;
