@@ -9,7 +9,7 @@ export class User extends Document {
   @Prop({})
   password: string;
 
-  @Prop({ enum: ['admin', 'user'] })
+  @Prop({ enum: ['superadmin', 'admin', 'user'] })
   userType: string;
 
   @Prop({ unique: true, sparse: true })
