@@ -1,12 +1,10 @@
 import { Controller, Get, Query, HttpStatus, HttpCode, Param, Headers } from '@nestjs/common';
 import { DepartmentsService } from './departments.service';
-import { Public } from '@libs';
 
 @Controller('departments')
 export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
 
-  @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(@Query() query?: any, @Headers('authorization') authHeader?: string) {

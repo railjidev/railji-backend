@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common';
 import { PapersService } from './papers.service';
 import { FetchPapersQueryDto } from './dto/paper.dto';
-import { Public, JwtAuthGuard } from '@libs';
 import { PaperAccessGuard } from './guards/paper-access.guard';
 import { paginate } from '@railji/shared';
 
@@ -28,7 +27,6 @@ export class PapersController {
     };
   }
 
-  @Public()
   @Get('top')
   @HttpCode(HttpStatus.OK)
   async getTopPapers() {
@@ -39,7 +37,6 @@ export class PapersController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':departmentId')
   @HttpCode(HttpStatus.OK)
   async fetchPapersForDepartment(
@@ -81,7 +78,7 @@ export class PapersController {
     };
   }
 
-  @UseGuards(JwtAuthGuard, PaperAccessGuard)
+  @UseGuards(PaperAccessGuard)
   @Get(':departmentId/:paperId')
   @HttpCode(HttpStatus.OK)
   async fetchQuestionsForDepartmentPaper(

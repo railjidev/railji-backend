@@ -2,7 +2,6 @@ import { EXAM_STATUS } from '../../../constants/app.constants';
 export interface StatusCount {
   [EXAM_STATUS.IN_PROGRESS]: number;
   [EXAM_STATUS.SUBMITTED]: number;
-  [EXAM_STATUS.ABANDONED]: number;
   [EXAM_STATUS.TIMEOUT]: number;
 }
 

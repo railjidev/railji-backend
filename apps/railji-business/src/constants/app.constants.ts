@@ -77,9 +77,11 @@ export const APP_CONSTANTS = {
 
   // Authentication Exclusions (routes that don't require JWT authentication)
   AUTH_EXCLUDED_ROUTES: [
+    '/business/v1/health',
     '/business/v1/papers/top',
     '/business/v1/departments',
     '/business/v1/departments/:departmentId',
+    '/business/v1/users',
   ],
 } as const;
 
