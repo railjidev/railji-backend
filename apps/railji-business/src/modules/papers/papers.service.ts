@@ -191,7 +191,7 @@ export class PapersService {
     supabaseId?: string,
   ): Promise<{
     paperCodes: PaperCodesByType;
-    papers: (Paper & { hasAccess: boolean })[];
+    papers: any[];
     total: number;
     page: number;
     totalPages: number;
