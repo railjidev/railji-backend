@@ -54,10 +54,6 @@ export class SubmitExamDto {
 
   @IsString()
   @IsNotEmpty()
-  userId: string;
-
-  @IsString()
-  @IsNotEmpty()
   paperId: string;
 
   @IsString()
@@ -83,10 +79,6 @@ export class SubmitExamDto {
 }
 
 export class StartExamDto {
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
-
   @IsString()
   @IsNotEmpty()
   paperId: string;

@@ -3,6 +3,7 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -16,13 +17,13 @@ import {
   GetExamStatsDto,
 } from './dto/exam.dto';
 import { PapersService } from '../papers/papers.service';
-import { ErrorHandlerService, buildDateFilter } from '@railji/shared';
+import { ErrorHandlerService, buildDateFilter, IOwnershipService } from '@railji/shared';
 import { calculateSkip, pagination } from '@railji/shared';
 import { EXAM_STATUS } from '../../constants/app.constants';
 import { ExamStats } from './interfaces/exam.interface';
 
 @Injectable()
-export class ExamsService {
+export class ExamsService implements IOwnershipService {
   private readonly logger = new Logger(ExamsService.name);
 
   constructor(
@@ -32,9 +33,9 @@ export class ExamsService {
   ) {}
 
   // Start exam session
-  async startExam(startExamDto: StartExamDto): Promise<any> {
+  async startExam(startExamDto: StartExamDto, userId: string): Promise<any> {
     try {
-      const { userId, paperId, departmentId, examMode } = startExamDto;
+      const { paperId, departmentId, examMode } = startExamDto;
 
       // Generate unique attempt ID
       const examId = randomUUID();
@@ -63,11 +64,10 @@ export class ExamsService {
   }
 
   // Submit exam answers
-  async submitExam(submitExamDto: SubmitExamDto): Promise<any> {
+  async submitExam(submitExamDto: SubmitExamDto, userId: string): Promise<any> {
     try {
       const {
         examId,
-        userId,
         paperId,
         departmentId,
         responses,
@@ -219,6 +219,20 @@ export class ExamsService {
     }
   }
 
+  // Verify exam ownership (implements IOwnershipService)
+  async verifyOwnership(examId: string, userId: string): Promise<void> {
+    const exam = await this.examModel.findOne({ examId }).exec();
+
+    if (!exam) {
+      throw new NotFoundException(`Exam with ID ${examId} not found`);
+    }
+
+    // Convert to string for comparison (in case userId is stored as ObjectId)
+    if (exam.userId.toString() !== userId) {
+      throw new ForbiddenException('You do not have access to this exam');
+    }
+  }
+
   // Get exam by examId
   async fetchExamByExamId(examId: string): Promise<any> {
     try {
@@ -329,7 +343,6 @@ export class ExamsService {
       statusCount: {
         [EXAM_STATUS.IN_PROGRESS]: statusCounts[EXAM_STATUS.IN_PROGRESS] || 0,
         [EXAM_STATUS.SUBMITTED]: statusCounts[EXAM_STATUS.SUBMITTED] || 0,
-        [EXAM_STATUS.ABANDONED]: statusCounts[EXAM_STATUS.ABANDONED] || 0,
         [EXAM_STATUS.TIMEOUT]: statusCounts[EXAM_STATUS.TIMEOUT] || 0,
       },
       averageScore: (meanBy(exams, 'score') || 0).toFixed(2),

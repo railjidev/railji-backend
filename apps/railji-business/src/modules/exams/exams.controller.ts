@@ -7,22 +7,28 @@ import {
   Get,
   Param,
   Query,
+  Req,
 } from '@nestjs/common';
 import { ExamsService } from './exams.service';
 import { SubmitExamDto, StartExamDto, GetExamStatsDto } from './dto/exam.dto';
-import { paginate } from '@railji/shared';
-import { Public } from '@libs';
+import { paginate, getUserIdFromRequest, RequireOwnership } from '@railji/shared';
+import { UsersService } from '../users/users.service';
 
 
 @Controller('exams')
 export class ExamsController {
-  constructor(private readonly examsService: ExamsService) {}
+  constructor(
+    private readonly examsService: ExamsService,
+    private readonly usersService: UsersService,
+  ) {}
 
   // POST /exams/start - Start exam session
   @Post('start')
   @HttpCode(HttpStatus.OK)
-  async startExam(@Body() startExamDto: StartExamDto) {
-    const result = await this.examsService.startExam(startExamDto);
+  async startExam(@Body() startExamDto: StartExamDto, @Req() req: any) {
+    const userId = await getUserIdFromRequest(req, this.usersService);
+    
+    const result = await this.examsService.startExam(startExamDto, userId);
     return {
       message: 'Exam session started successfully',
       data: result,
@@ -30,10 +36,13 @@ export class ExamsController {
   }
 
   // POST /exams/submit - Submit exam answers
+  @RequireOwnership('examId', 'body')
   @Post('submit')
   @HttpCode(HttpStatus.OK)
-  async submitExam(@Body() submitExamDto: SubmitExamDto) {
-    const result = await this.examsService.submitExam(submitExamDto);
+  async submitExam(@Body() submitExamDto: SubmitExamDto, @Req() req: any) {
+    const userId = await getUserIdFromRequest(req, this.usersService);
+    
+    const result = await this.examsService.submitExam(submitExamDto, userId);
     return {
       message: 'Exam submitted successfully',
       data: result,
@@ -41,6 +50,7 @@ export class ExamsController {
   }
 
   // GET /result/:examId - Fetch exam by examId
+  @RequireOwnership('examId', 'body')
   @Get('result/:examId')
   @HttpCode(HttpStatus.OK)
   async getExam(@Param('examId') examId: string) {
@@ -52,7 +62,7 @@ export class ExamsController {
   }
 
   // GET /exams/stats/:userId - Fetch exam statistics by userId
-  @Public()
+  @RequireOwnership('userId')
   @Get('stats/:userId')
   @HttpCode(HttpStatus.OK)
   async getExamStats(
@@ -70,7 +80,7 @@ export class ExamsController {
   }
 
   // GET /exams/history/:userId - Fetch exam history by userId
-  @Public()
+  @RequireOwnership('userId')
   @Get('history/:userId')
   @HttpCode(HttpStatus.OK)
   async getExamHistory(

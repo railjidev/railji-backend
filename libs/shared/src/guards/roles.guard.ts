@@ -87,10 +87,8 @@ export class RolesGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      if (
-        error instanceof ForbiddenException ||
-        error instanceof UnauthorizedException
-      ) {
+      // Re-throw HTTP exceptions to preserve their status and message
+      if (typeof error?.getStatus === 'function') {
         throw error;
       }
       throw new UnauthorizedException('Authorization failed');
