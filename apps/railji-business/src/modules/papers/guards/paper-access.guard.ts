@@ -4,7 +4,8 @@ import {
   ExecutionContext,
   NotFoundException,
   UnauthorizedException,
-  ForbiddenException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { PapersService } from '../papers.service';
 import { SubscriptionsService } from '../../subscriptions/subscriptions.service';
@@ -60,8 +61,9 @@ export class PaperAccessGuard implements CanActivate {
     );
 
     if (!hasAccess) {
-      throw new ForbiddenException(
+      throw new HttpException(
         'Active subscription required to access this paper. You need access to either this specific paper or its department.',
+        HttpStatus.PAYMENT_REQUIRED,
       );
     }
 
