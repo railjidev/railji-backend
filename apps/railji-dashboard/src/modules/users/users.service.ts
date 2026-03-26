@@ -49,6 +49,17 @@ export class UsersService {
     }
   }
 
+  async findUserBySupabaseId(supabaseId: string): Promise<User | null> {
+    try {
+      const user = await this.userModel.findOne({ supabaseId }).lean().exec();
+      return user;
+    } catch (error) {
+      this.errorHandler.handle(error, {
+        context: 'UsersService.findUserBySupabaseId',
+      });
+    }
+  }
+
   async toggle(userId: string) {
     try {
       const user = await this.userModel.findById(userId).exec();

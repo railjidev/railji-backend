@@ -80,7 +80,7 @@ export * from './auth';
 export { JwtAuthMiddleware } from './middleware/jwt-auth.middleware';
 
 // Guards
-export { RolesGuard } from './guards/roles.guard';
+export { RolesGuard, IOwnershipService } from './guards/roles.guard';
 
 // Decorators
 export { Roles, ROLES_KEY } from './decorators/roles.decorator';

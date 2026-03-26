@@ -20,6 +20,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Reflector } from '@nestjs/core';
 import { UsersService } from './modules/users/users.service';
+import { ExamsService } from './modules/exams/exams.service';
 import { AUTH_EXCLUDED_ROUTES } from './constants/app.constants';
 
 @Module({
@@ -41,10 +42,10 @@ import { AUTH_EXCLUDED_ROUTES } from './constants/app.constants';
     AppService,
     {
       provide: APP_GUARD,
-      useFactory: (reflector: Reflector, usersService: UsersService) => {
-        return new RolesGuard(reflector, usersService);
+      useFactory: (reflector: Reflector, usersService: UsersService, examsService: ExamsService) => {
+        return new RolesGuard(reflector, usersService, examsService);
       },
-      inject: [Reflector, UsersService],
+      inject: [Reflector, UsersService, ExamsService],
     },
     {
       provide: APP_INTERCEPTOR,
