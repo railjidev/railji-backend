@@ -49,7 +49,7 @@ export class UsersService {
     }
   }
 
-  async findUserBySupabaseId(supabaseId: string): Promise<User | null> {
+  async findUserBySupabaseId(supabaseId: string): Promise<any> {
     try {
       const user = await this.userModel.findOne({ supabaseId }).lean().exec();
       return user;

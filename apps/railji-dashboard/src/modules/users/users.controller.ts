@@ -7,17 +7,20 @@ import {
   Query,
   HttpStatus,
   HttpCode,
-  UseGuards,
   Body,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { paginate } from '@railji/shared';
-import { Public, JwtAuthGuard } from '@libs';
+import { SubscriptionsService } from './subscriptions.service';
+import { GrantAccessDto } from './dto/grant-access.dto';
+import { RevokeAccessDto } from './dto/revoke-access.dto';
+import { paginate, Roles } from '@railji/shared';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly subscriptionsService: SubscriptionsService,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -43,7 +46,6 @@ export class UsersController {
     };
   }
 
-  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() { email, password }: { email: string; password: string }) {
@@ -51,6 +53,71 @@ export class UsersController {
     return {
       message: 'Login successful',
       data: result
+    };
+  }
+
+  @Roles('superadmin')
+  @Post('grant-access')
+  @HttpCode(HttpStatus.CREATED)
+  async grantAccess(@Body() grantAccessDto: GrantAccessDto) {
+    const subscriptions = await this.subscriptionsService.grantAccess(grantAccessDto);
+    
+    const departmentSubscriptions = subscriptions.filter(s => s.accessType === 'department');
+    const paperSubscriptions = subscriptions.filter(s => s.accessType === 'paper');
+    const totalPapers = paperSubscriptions.reduce((sum, sub) => sum + (sub.paperIds?.length || 0), 0);
+    
+    return {
+      message: `Access granted successfully to user ${grantAccessDto.userId}. Created ${subscriptions.length} subscription(s).`,
+      data: {
+        subscriptions,
+        summary: {
+          totalSubscriptions: subscriptions.length,
+          departmentSubscriptions: departmentSubscriptions.length,
+          paperBundleSubscriptions: paperSubscriptions.length,
+          totalPapersGranted: totalPapers,
+        }
+      },
+    };
+  }
+
+  @Get(':userId/subscriptions')
+  @HttpCode(HttpStatus.OK)
+  async getUserSubscriptions(@Param('userId') userId: string) {
+    const subscriptions = await this.subscriptionsService.getUserSubscriptions(userId);
+    return {
+      message: 'User subscriptions retrieved successfully',
+      data: subscriptions,
+    };
+  }
+  
+  @Roles('superadmin')
+  @Patch('revoke-access')
+  @HttpCode(HttpStatus.OK)
+  async revokeAccess(@Body() revokeAccessDto: RevokeAccessDto) {
+    const { userId, departmentId, paperId } = revokeAccessDto;
+    
+    // Validate that exactly one is provided
+    if (!departmentId && !paperId) {
+      return {
+        message: 'Either departmentId or paperId must be provided',
+        statusCode: HttpStatus.BAD_REQUEST,
+      };
+    }
+    
+    if (departmentId && paperId) {
+      return {
+        message: 'Only one of departmentId or paperId should be provided, not both',
+        statusCode: HttpStatus.BAD_REQUEST,
+      };
+    }
+
+    const result = await this.subscriptionsService.revokeAccess(userId, departmentId, paperId);
+    return {
+      message: result.message,
+      data: {
+        modifiedSubscriptions: result.modifiedSubscriptions,
+        revokedAccess: departmentId ? { departmentId } : { paperId },
+      },
     };
   }
 }
