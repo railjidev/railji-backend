@@ -50,7 +50,7 @@ export class ExamsController {
   }
 
   // GET /result/:examId - Fetch exam by examId
-  @RequireOwnership('examId', 'body')
+  @RequireOwnership('examId', 'param')
   @Get('result/:examId')
   @HttpCode(HttpStatus.OK)
   async getExam(@Param('examId') examId: string) {
