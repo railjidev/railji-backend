@@ -16,10 +16,10 @@ import { UpdatePaperDto } from './dto/update-paper.dto';
 import { Roles } from '@railji/shared';
 
 @Controller('papers')
-@Roles('admin', 'superadmin')
 export class PapersController {
   constructor(private readonly papersService: PapersService) {}
 
+  @Roles('admin', 'superadmin')
   @Post('create')
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createPaperDto: CreatePaperDto) {
@@ -30,6 +30,7 @@ export class PapersController {
     };
   }
 
+  @Roles('admin', 'superadmin')
   @Patch(':paperId')
   @HttpCode(HttpStatus.OK)
   async update(
@@ -46,6 +47,7 @@ export class PapersController {
     };
   }
 
+  @Roles('superadmin')
   @Delete(':paperId')
   @HttpCode(HttpStatus.OK)
   async remove(
@@ -58,6 +60,7 @@ export class PapersController {
     };
   }
 
+  @Roles('admin', 'superadmin')
   @Get('stats')
   @HttpCode(HttpStatus.OK)
   async getDashboardStats(
