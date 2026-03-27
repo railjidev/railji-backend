@@ -11,7 +11,7 @@ import {
 import { PapersService } from './papers.service';
 import { FetchPapersQueryDto } from './dto/paper.dto';
 import { PaperAccessGuard } from './guards/paper-access.guard';
-import { paginate } from '@railji/shared';
+import { paginate, Roles } from '@railji/shared';
 
 @Controller('papers')
 export class PapersController {
@@ -48,53 +48,6 @@ export class PapersController {
     return this.buildDepartmentPapersResponse(departmentId, query, supabaseId);
   }
 
-  @Get(':supabaseId/:departmentId')
-  @HttpCode(HttpStatus.OK)
-  async getUserDepartmentPapers(
-    @Param('supabaseId') supabaseId: string,
-    @Param('departmentId') departmentId: string,
-    @Query() query: FetchPapersQueryDto,
-  ) {
-    return this.buildDepartmentPapersResponse(departmentId, query, supabaseId);
-  }
-
-  private async buildDepartmentPapersResponse(
-    departmentId: string,
-    query: FetchPapersQueryDto,
-    supabaseId: string,
-  ) {
-    const { page, limit } = paginate(query.page, query.limit);
-
-    // Build search query from optional filters
-    const searchQuery: FetchPapersQueryDto = {};
-    if (query.paperCode) searchQuery.paperCode = query.paperCode;
-    if (query.paperType) searchQuery.paperType = query.paperType;
-    if (query.year) searchQuery.year = query.year;
-    if (query.sortBy) searchQuery.sortBy = query.sortBy;
-    if (query.sortOrder) searchQuery.sortOrder = query.sortOrder;
-
-    const result = await this.papersService.fetchPapersForDepartment(
-      departmentId,
-      page,
-      limit,
-      searchQuery,
-      supabaseId,
-    );
-
-    return {
-      message: 'Papers retrieved successfully',
-      data: {
-        papers: result.papers,
-        metadata: { paperCodes: result.paperCodes },
-        pagination: {
-          page: result.page,
-          limit,
-          total: result.total,
-          totalPages: result.totalPages,
-        },
-      },
-    };
-  }
 
   @UseGuards(PaperAccessGuard)
   @Get(':departmentId/:paperId')
@@ -146,6 +99,55 @@ export class PapersController {
     return {
       message: 'Question retrieved successfully',
       data: question,
+    };
+  }
+
+  @Roles('superadmin')
+  @Get(':departmentId/user/:supabaseId')
+  @HttpCode(HttpStatus.OK)
+  async getUserDepartmentPapers(
+    @Param('supabaseId') supabaseId: string,
+    @Param('departmentId') departmentId: string,
+    @Query() query: FetchPapersQueryDto,
+  ) {
+    return this.buildDepartmentPapersResponse(departmentId, query, supabaseId);
+  }
+
+  private async buildDepartmentPapersResponse(
+    departmentId: string,
+    query: FetchPapersQueryDto,
+    supabaseId: string,
+  ) {
+    const { page, limit } = paginate(query.page, query.limit);
+
+    // Build search query from optional filters
+    const searchQuery: FetchPapersQueryDto = {};
+    if (query.paperCode) searchQuery.paperCode = query.paperCode;
+    if (query.paperType) searchQuery.paperType = query.paperType;
+    if (query.year) searchQuery.year = query.year;
+    if (query.sortBy) searchQuery.sortBy = query.sortBy;
+    if (query.sortOrder) searchQuery.sortOrder = query.sortOrder;
+
+    const result = await this.papersService.fetchPapersForDepartment(
+      departmentId,
+      page,
+      limit,
+      searchQuery,
+      supabaseId,
+    );
+
+    return {
+      message: 'Papers retrieved successfully',
+      data: {
+        papers: result.papers,
+        metadata: { paperCodes: result.paperCodes },
+        pagination: {
+          page: result.page,
+          limit,
+          total: result.total,
+          totalPages: result.totalPages,
+        },
+      },
     };
   }
 }
