@@ -1,5 +1,6 @@
 import { Controller, Get, Query, HttpStatus, HttpCode, Param, Headers } from '@nestjs/common';
 import { DepartmentsService } from './departments.service';
+import { Roles } from '@libs';
 
 @Controller('departments')
 export class DepartmentsController {
@@ -39,6 +40,20 @@ export class DepartmentsController {
     );
     return {
       message: 'Materials retrieved successfully',
+      data: result,
+    };
+  }
+
+  @Roles('superadmin')
+  @Get(':supabaseId/departments')
+  @HttpCode(HttpStatus.OK)
+  async getUserDepartments(
+    @Param('supabaseId') supabaseId: string,
+    @Query() query?: any,
+  ) {
+    const result = await this.departmentsService.fetchAllDepartments(query, supabaseId);
+    return {
+      message: 'Departments retrieved successfully',
       data: result,
     };
   }

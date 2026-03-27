@@ -29,7 +29,7 @@ export class UsersService {
       const [users, total] = await Promise.all([
         this.userModel
           .find()
-          .select('-password -supabaseId')
+          .select('-password')
           .skip(skip)
           .limit(limit)
           .sort({ createdAt: -1 })
@@ -78,7 +78,7 @@ export class UsersService {
           { isActive: newActiveStatus },
           { new: true }
         )
-        .select('-password -supabaseId')
+        .select('-password')
         .lean()
         .exec();
 
