@@ -36,6 +36,7 @@ export class UsersController {
     };
   }
 
+  @Roles('superadmin')
   @Patch(':userId/toggle')
   @HttpCode(HttpStatus.OK)
   async toggle(@Param('userId') userId: string) {
@@ -46,6 +47,7 @@ export class UsersController {
     };
   }
 
+  @Roles('admin', 'superadmin')
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() { email, password }: { email: string; password: string }) {
