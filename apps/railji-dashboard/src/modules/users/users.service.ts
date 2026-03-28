@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, ErrorHandlerService, generateUserId } from '@railji/shared';
@@ -132,7 +132,7 @@ export class UsersService {
       // Check if user has admin or superadmin role
       if (existingUser.userType !== 'admin' && existingUser.userType !== 'superadmin') {
         this.logger.warn(`User ${userEmail} attempted dashboard login with userType: ${existingUser.userType}`);
-        throw new UnauthorizedException('User not authorized for dashboard access');
+        throw new ForbiddenException('User not authorized for dashboard access');
       }
 
       // Update lastLoggedIn for existing user
