@@ -50,7 +50,7 @@ export class UsersService extends SharedUsersService {
     }
   }
 
-  // findUserBySupabaseId is inherited from SharedUsersService
+  // getUserFromRequest and findUserById are inherited from SharedUsersService
 
   async toggle(userId: string) {
     try {

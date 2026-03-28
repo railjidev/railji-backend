@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IUserService } from '../utils/auth.utils';
+import { SharedUsersService } from '../services/users.service';
 
 export const ROLES_KEY = 'roles';
 export const OWNERSHIP_KEY = 'ownership';
@@ -23,7 +23,7 @@ export interface IOwnershipService {
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private usersService: IUserService,
+    private usersService: SharedUsersService,
     private ownershipService?: IOwnershipService,
   ) {}
 
@@ -45,19 +45,10 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const supabaseId = request.user?.userId;
-
-    if (!supabaseId) {
-      throw new UnauthorizedException('Authentication required');
-    }
 
     try {
-      // Fetch user from database
-      const user = await this.usersService.findUserBySupabaseId(supabaseId);
-
-      if (!user) {
-        throw new UnauthorizedException('User not found in database');
-      }
+      // Get user from request using the streamlined method
+      const user = await this.usersService.getUserFromRequest(request);
 
       // Check role-based access
       if (roles && roles.length > 0) {

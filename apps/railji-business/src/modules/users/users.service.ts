@@ -71,7 +71,7 @@ export class UsersService extends SharedUsersService {
     }
   }
 
-  // findUserById and findUserBySupabaseId are inherited from SharedUsersService
+  // getUserFromRequest is inherited from SharedUsersService
 
   async updateLastLoggedIn(userId: string): Promise<User> {
     try {

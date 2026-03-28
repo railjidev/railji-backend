@@ -70,10 +70,6 @@ export {
   paginate,
 } from './utils/pagination.utils';
 export {
-  getUserIdFromRequest,
-  IUserService,
-} from './utils/auth.utils';
-export {
   filterNullValues,
   ensureCleanArray,
   cleanObjectArrays,
