@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, HttpStatus, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, HttpStatus, HttpCode, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -28,8 +28,8 @@ export class UsersController {
 
   @Get(':userId')
   @HttpCode(HttpStatus.OK)
-  async findUserById(@Param('userId') userId: string) {
-    const user = await this.usersService.findUserById(userId);
+  async findUserById(@Param('userId') userId: string, @Req() req: any) {
+    const user = await this.usersService.getUserFromRequest(req);
     return {
       message: 'User retrieved successfully',
       data: user,
@@ -38,8 +38,8 @@ export class UsersController {
 
   @Get('supabase/:supabaseId')
   @HttpCode(HttpStatus.OK)
-  async findUserBySupabaseId(@Param('supabaseId') supabaseId: string) {
-    const user = await this.usersService.findUserBySupabaseId(supabaseId);
+  async findUserBySupabaseId(@Param('supabaseId') supabaseId: string, @Req() req: any) {
+    const user = await this.usersService.getUserFromRequest(req);
     return {
       message: 'User retrieved successfully',
       data: user,

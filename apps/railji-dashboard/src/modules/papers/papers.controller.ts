@@ -9,21 +9,29 @@ import {
   HttpStatus,
   HttpCode,
   Get,
+  Req,
 } from '@nestjs/common';
 import { PapersService } from './papers.service';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
-import { Roles } from '@railji/shared';
+import { Roles, SharedUsersService } from '@railji/shared';
 
 @Controller('papers')
 export class PapersController {
-  constructor(private readonly papersService: PapersService) {}
+  constructor(
+    private readonly papersService: PapersService,
+    private readonly sharedUsersService: SharedUsersService,
+  ) {}
 
   @Roles('admin', 'superadmin')
   @Post('create')
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createPaperDto: CreatePaperDto) {
-    const result = await this.papersService.createPaper(createPaperDto);
+  async create(
+    @Body() createPaperDto: CreatePaperDto,
+    @Req() req: any,
+  ) {
+    const user = await this.sharedUsersService.getUserFromRequest(req);
+    const result = await this.papersService.createPaper(createPaperDto, user.userId);
     return {
       message: 'Paper created successfully',
       data: result,
@@ -36,10 +44,13 @@ export class PapersController {
   async update(
     @Param('paperId') paperId: string,
     @Body() updatePaperDto: UpdatePaperDto,
+    @Req() req: any,
   ) {
+    const user = await this.sharedUsersService.getUserFromRequest(req);
     const result = await this.papersService.updatePaper(
       paperId,
       updatePaperDto,
+      user.userId,
     );
     return {
       message: 'Paper updated successfully',
@@ -52,9 +63,10 @@ export class PapersController {
   @HttpCode(HttpStatus.OK)
   async remove(
     @Param('paperId') paperId: string,
-    @Body('username') username?: string,
+    @Req() req: any,
   ) {
-    await this.papersService.deletePaper(paperId, username);
+    const user = await this.sharedUsersService.getUserFromRequest(req);
+    await this.papersService.deletePaper(paperId, user.userId);
     return {
       message: 'Paper deleted successfully',
     };

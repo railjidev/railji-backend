@@ -22,18 +22,15 @@ export class PaperAccessGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const paperId = request.params.paperId;
-    const supabaseId = request.user?.userId;
     
-    // Fetch userId from users collection using supabaseId
+    // Get user from request
     let userId: string | null = null;
-    if (supabaseId) {
-      try {
-        const user = await this.usersService.findUserBySupabaseId(supabaseId);
-        userId = user.userId;
-      } catch (error) {
-        // User not found in our database
-        userId = null;
-      }
+    try {
+      const user = await this.usersService.getUserFromRequest(request);
+      userId = user.userId;
+    } catch (error) {
+      // User not authenticated
+      userId = null;
     }
 
     // Fetch paper by ID

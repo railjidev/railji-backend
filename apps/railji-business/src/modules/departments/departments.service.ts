@@ -24,7 +24,7 @@ export class DepartmentsService {
     private readonly subscriptionsService: SubscriptionsService,
   ) {}
 
-  async fetchAllDepartments(query?: any, supabaseId?: string): Promise<any[]> {
+  async fetchAllDepartments(query?: any, userId?: string): Promise<any[]> {
     try {
       // Cache key for departments (without user-specific data)
       const departmentsCacheKey = `${this.DEPARTMENTS_CACHE_KEY}`;
@@ -52,18 +52,7 @@ export class DepartmentsService {
         this.logger.debug('Returning cached departments data');
       }
 
-      // Fetch userId from supabaseId if provided
-      let userId: string | null = null;
-      if (supabaseId) {
-        try {
-          const user = await this.usersService.findUserBySupabaseId(supabaseId);
-          userId = user.userId;
-        } catch (error) {
-          // User not found in our database
-          userId = null;
-        }
-      }
-
+      // userId is already provided as parameter
       // Add hasAccess field to each department
       const departmentsWithAccess = await Promise.all(
         departments.map(async (department) => {

@@ -9,6 +9,7 @@ import {
   QuestionBankSchema,
   User,
   UserSchema,
+  SharedUsersService,
 } from '@railji/shared';
 import { SharedCommonModule } from '@railji/shared';
 import { AuditLog, AuditLogSchema } from './schemas/audit-log.schema';
@@ -24,7 +25,7 @@ import { AuditLog, AuditLogSchema } from './schemas/audit-log.schema';
     SharedCommonModule,
   ],
   controllers: [PapersController],
-  providers: [PapersService],
+  providers: [PapersService, SharedUsersService],
   exports: [PapersService],
 })
 export class PapersModule {}

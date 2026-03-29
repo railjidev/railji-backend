@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ExamsService } from './exams.service';
 import { SubmitExamDto, StartExamDto, GetExamStatsDto } from './dto/exam.dto';
-import { paginate, getUserIdFromRequest, RequireOwnership } from '@railji/shared';
+import { paginate, RequireOwnership } from '@railji/shared';
 import { UsersService } from '../users/users.service';
 
 
@@ -26,9 +26,9 @@ export class ExamsController {
   @Post('start')
   @HttpCode(HttpStatus.OK)
   async startExam(@Body() startExamDto: StartExamDto, @Req() req: any) {
-    const userId = await getUserIdFromRequest(req, this.usersService);
+    const user = await this.usersService.getUserFromRequest(req);
     
-    const result = await this.examsService.startExam(startExamDto, userId);
+    const result = await this.examsService.startExam(startExamDto, user.userId);
     return {
       message: 'Exam session started successfully',
       data: result,
@@ -40,9 +40,9 @@ export class ExamsController {
   @Post('submit')
   @HttpCode(HttpStatus.OK)
   async submitExam(@Body() submitExamDto: SubmitExamDto, @Req() req: any) {
-    const userId = await getUserIdFromRequest(req, this.usersService);
+    const user = await this.usersService.getUserFromRequest(req);
     
-    const result = await this.examsService.submitExam(submitExamDto, userId);
+    const result = await this.examsService.submitExam(submitExamDto, user.userId);
     return {
       message: 'Exam submitted successfully',
       data: result,
