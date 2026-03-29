@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Subscription, ErrorHandlerService } from '@railji/shared';
 import { GrantAccessDto } from './dto/grant-access.dto';
+import { PapersService } from '../papers/papers.service';
 
 @Injectable()
 export class SubscriptionsService {
@@ -12,9 +13,10 @@ export class SubscriptionsService {
     @InjectModel(Subscription.name)
     private subscriptionModel: Model<Subscription>,
     private errorHandler: ErrorHandlerService,
+    private papersService: PapersService,
   ) {}
 
-  async grantAccess(grantAccessDto: GrantAccessDto): Promise<Subscription[]> {
+  async grantAccess(grantAccessDto: GrantAccessDto, adminId?: string): Promise<Subscription[]> {
     try {
       this.validateGrantAccessDto(grantAccessDto);
 
@@ -31,6 +33,14 @@ export class SubscriptionsService {
           grantAccessDto
         );
         subscriptions.push(departmentSub);
+
+        // Log grant operation for department
+        if (adminId) {
+          await this.papersService.logPaperOperation(adminId, 'grant', {
+            userId,
+            departmentId,
+          });
+        }
       }
 
       if (paperId) {
@@ -42,6 +52,14 @@ export class SubscriptionsService {
           grantAccessDto
         );
         subscriptions.push(paperSub);
+
+        // Log grant operation for paper
+        if (adminId) {
+          await this.papersService.logPaperOperation(adminId, 'grant', {
+            userId,
+            paperId,
+          });
+        }
       }
 
       this.logger.log(
@@ -194,7 +212,7 @@ export class SubscriptionsService {
     }
   }
 
-  async revokeAccess(userId: string, departmentId?: string, paperId?: string): Promise<{ modifiedSubscriptions: Subscription[], message: string }> {
+  async revokeAccess(userId: string, departmentId?: string, paperId?: string, adminId?: string): Promise<{ modifiedSubscriptions: Subscription[], message: string }> {
     try {
       if (!departmentId && !paperId) {
         throw new Error('Either departmentId or paperId must be specified for revocation');
@@ -226,6 +244,14 @@ export class SubscriptionsService {
           const savedSubscription = await subscription.save();
           modifiedSubscriptions.push(savedSubscription);
         }
+
+        // Log revoke operation for department
+        if (adminId) {
+          await this.papersService.logPaperOperation(adminId, 'revoke', {
+            userId,
+            departmentId,
+          });
+        }
       }
 
       if (paperId) {
@@ -255,6 +281,14 @@ export class SubscriptionsService {
           subscription.updatedAt = new Date();
           const savedSubscription = await subscription.save();
           modifiedSubscriptions.push(savedSubscription);
+        }
+
+        // Log revoke operation for paper
+        if (adminId) {
+          await this.papersService.logPaperOperation(adminId, 'revoke', {
+            userId,
+            paperId,
+          });
         }
       }
 

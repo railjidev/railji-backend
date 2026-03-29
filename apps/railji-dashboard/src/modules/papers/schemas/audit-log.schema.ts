@@ -4,13 +4,17 @@ import { Document } from 'mongoose';
 @Schema({ collection: 'audit-logs', timestamps: true })
 export class AuditLog extends Document {
   @Prop({ required: true })
-  username: string;
+  adminId: string;
 
-  @Prop({ required: true, enum: ['create', 'update', 'delete'] })
+  @Prop({ required: true, enum: ['create', 'update', 'delete', 'grant', 'revoke'] })
   action: string;
 
-  @Prop({ required: true })
-  paperId: string;
+  @Prop({ required: true, type: Object })
+  metadata: {
+    paperId?: string;
+    departmentId?: string;
+    userId?: string;
+  };
 
   @Prop({ required: true })
   message: string;

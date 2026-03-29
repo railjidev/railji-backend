@@ -5,6 +5,7 @@ import { UsersService } from './users.service';
 import { SubscriptionsService } from './subscriptions.service';
 import { User, UserSchema, Subscription, SubscriptionSchema } from '@railji/shared';
 import { SharedCommonModule } from '@railji/shared';
+import { PapersModule } from '../papers/papers.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { SharedCommonModule } from '@railji/shared';
       { name: Subscription.name, schema: SubscriptionSchema },
     ]),
     SharedCommonModule,
+    PapersModule,
   ],
   controllers: [UsersController],
   providers: [UsersService, SubscriptionsService],

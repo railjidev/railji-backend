@@ -8,6 +8,7 @@ import {
   HttpStatus,
   HttpCode,
   Body,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { SubscriptionsService } from './subscriptions.service';
@@ -60,8 +61,12 @@ export class UsersController {
   @Roles('superadmin')
   @Post('grant-access')
   @HttpCode(HttpStatus.CREATED)
-  async grantAccess(@Body() grantAccessDto: GrantAccessDto) {
-    const subscriptions = await this.subscriptionsService.grantAccess(grantAccessDto);
+  async grantAccess(
+    @Body() grantAccessDto: GrantAccessDto,
+    @Req() req: any,
+  ) {
+    const user = await this.usersService.getUserFromRequest(req);
+    const subscriptions = await this.subscriptionsService.grantAccess(grantAccessDto, user.userId);
     
     const departmentSubscriptions = subscriptions.filter(s => s.accessType === 'department');
     const paperSubscriptions = subscriptions.filter(s => s.accessType === 'paper');
@@ -94,7 +99,10 @@ export class UsersController {
   @Roles('superadmin')
   @Patch('revoke-access')
   @HttpCode(HttpStatus.OK)
-  async revokeAccess(@Body() revokeAccessDto: RevokeAccessDto) {
+  async revokeAccess(
+    @Body() revokeAccessDto: RevokeAccessDto,
+    @Req() req: any,
+  ) {
     const { userId, departmentId, paperId } = revokeAccessDto;
     
     // Validate that exactly one is provided
@@ -112,7 +120,8 @@ export class UsersController {
       };
     }
 
-    const result = await this.subscriptionsService.revokeAccess(userId, departmentId, paperId);
+    const user = await this.usersService.getUserFromRequest(req);
+    const result = await this.subscriptionsService.revokeAccess(userId, departmentId, paperId, user.userId);
     return {
       message: result.message,
       data: {
