@@ -20,7 +20,7 @@ export class PapersService {
     private errorHandler: ErrorHandlerService,
   ) {}
 
-  async createPaper(createPaperDto: CreatePaperDto): Promise<any> {
+  async createPaper(createPaperDto: CreatePaperDto, adminId?: string): Promise<any> {
     try {
       const paperId = generatePaperId();
 
@@ -44,7 +44,9 @@ export class PapersService {
       ];
       await Promise.all(promises);
 
-      this.logPaperOperation(username, 'create', paperId);
+      if (adminId) {
+        this.logPaperOperation(adminId, 'create', { paperId });
+      }
       this.logger.log(`${paperId} created successfully`);
       return { paperId };
     } catch (error) {
@@ -57,6 +59,7 @@ export class PapersService {
   async updatePaper(
     paperId: string,
     updatePaperDto: UpdatePaperDto,
+    adminId?: string,
   ): Promise<any> {
     try {
       const { questions, username, ...paperData } = updatePaperDto;
@@ -81,7 +84,9 @@ export class PapersService {
           : Promise.resolve(),
       ]);
 
-      this.logPaperOperation(username, 'update', paperId);
+      if (adminId) {
+        this.logPaperOperation(adminId, 'update', { paperId });
+      }
       this.logger.log(`${paperId} updated successfully`);
       return { paperId };
     } catch (error) {
@@ -91,7 +96,7 @@ export class PapersService {
     }
   }
 
-  async deletePaper(paperId: string, username?: string): Promise<void> {
+  async deletePaper(paperId: string, adminId?: string): Promise<void> {
     try {
       const promises = [
         this.paperModel.deleteOne({ paperId }).exec(),
@@ -99,7 +104,9 @@ export class PapersService {
       ];
 
       await Promise.all(promises);
-      this.logPaperOperation(username, 'delete', paperId);
+      if (adminId) {
+        this.logPaperOperation(adminId, 'delete', { paperId });
+      }
       this.logger.log(`${paperId} deleted successfully`);
     } catch (error) {
       this.errorHandler.handle(error, {
@@ -109,17 +116,31 @@ export class PapersService {
   }
 
   async logPaperOperation(
-    username: string,
-    action: 'create' | 'update' | 'delete',
-    paperId: string,
+    adminId: string,
+    action: 'create' | 'update' | 'delete' | 'grant' | 'revoke',
+    metadata: {
+      paperId?: string;
+      departmentId?: string;
+      userId?: string;
+    },
   ): Promise<void> {
     try {
-      const message = `${username} has ${action}d ${paperId}`;
+      let message = `Admin ${adminId} has ${action}d`;
+      
+      if (metadata.paperId) {
+        message += ` paper ${metadata.paperId}`;
+      }
+      if (metadata.departmentId) {
+        message += ` for department ${metadata.departmentId}`;
+      }
+      if (metadata.userId) {
+        message += ` for user ${metadata.userId}`;
+      }
 
       await this.auditLogModel.create({
-        username,
+        adminId,
         action,
-        paperId,
+        metadata,
         message,
       });
 
