@@ -40,6 +40,42 @@ export class PapersService {
     this.logger.debug('Cleared all paper codes cache and top papers cache');
   }
 
+  async fetchDesignationsForDepartment(departmentId: string): Promise<string[]> {
+    try {
+      const cacheKey = `designations:${departmentId}`;
+
+      // Check cache first
+      const cached = this.cacheService.get<string[]>(cacheKey);
+      if (cached) {
+        this.logger.debug(`Returning cached designations for department: ${departmentId}`);
+        return cached;
+      }
+
+      // Fetch distinct designations for the department
+      const designations = await this.paperModel
+        .distinct('designation', {
+          $or: [
+            { paperType: 'general' },
+            { departmentId, paperType: { $ne: 'general' } },
+          ],
+        })
+        .exec();
+
+      // Clean and sort designations
+      const cleanedDesignations = ensureCleanArray(designations.filter((p): p is string => typeof p === 'string')).sort();
+
+      // Cache the results
+      this.cacheService.set(cacheKey, cleanedDesignations, this.DEFAULT_TTL);
+      this.logger.debug(`Cached ${cleanedDesignations.length} designations for department: ${departmentId}`);
+
+      return cleanedDesignations;
+    } catch (error) {
+      this.errorHandler.handle(error, {
+        context: 'PapersService.fetchDesignationsForDepartment',
+      });
+    }
+  }
+
   async findAll(query?: any): Promise<Paper[]> {
     try {
       const papers = await this.paperModel.find(query || {}).exec();
@@ -90,36 +126,44 @@ export class PapersService {
     }
   }
 
-  async fetchPaperCodesByType(departmentId: string): Promise<PaperCodesByType> {
+  async fetchPaperCodesByType(
+    departmentId: string,
+    designations?: string,
+  ): Promise<PaperCodesByType> {
     try {
-      const cacheKey = this.generateCacheKey(departmentId);
+      const cacheKey = this.generateCacheKey(departmentId, { designations });
 
       // Check if paper codes are already cached
       /* const cached = this.cacheService.get<PaperCodesByType>(cacheKey);
       if (cached) {
         this.logger.debug(
-          `Returning cached paper codes for department: ${departmentId}`,
+          `Returning cached paper codes for department: ${departmentId}, designations: ${designations}`,
         );
         return cached;
       } */
+
+      // Build match conditions
+      const matchConditions: any = {
+        $or: [
+          // General papers from entire collection (no department filter)
+          {
+            paperType: 'general',
+            ...(designations && { designations }),
+          },
+          // Non-general papers from specific department only
+          {
+            departmentId,
+            paperType: { $ne: 'general' },
+            ...(designations && { designations }),
+          },
+        ],
+      };
 
       // Single aggregation with conditional logic for general vs non-general papers
       const result = await this.paperModel
         .aggregate([
           {
-            $match: {
-              $or: [
-                // General papers from entire collection (no department filter)
-                {
-                  paperType: 'general',
-                },
-                // Non-general papers from specific department only
-                {
-                  departmentId,
-                  paperType: { $ne: 'general' },
-                },
-              ],
-            },
+            $match: matchConditions,
           },
           {
             $group: {
@@ -171,7 +215,7 @@ export class PapersService {
       // Cache the results
       this.cacheService.set(cacheKey, cleanedPaperCodes, this.DEFAULT_TTL);
       this.logger.debug(
-        `Cached ${cleanedPaperCodes.general.length} general and ${cleanedPaperCodes.nonGeneral.length} non-general paper codes for department: ${departmentId}`,
+        `Cached ${cleanedPaperCodes.general.length} general and ${cleanedPaperCodes.nonGeneral.length} non-general paper codes for department: ${departmentId}${designations ? `, designations: ${designations}` : ''}`,
       );
 
       return cleanedPaperCodes;
@@ -187,8 +231,9 @@ export class PapersService {
     page: number = 1,
     limit: number = 10,
     query?: FetchPapersQueryDto,
-    supabaseId?: string,
+    userId?: string,
   ): Promise<{
+    designations: string[];
     paperCodes: PaperCodesByType;
     papers: any[];
     total: number;
@@ -201,12 +246,15 @@ export class PapersService {
       // Build the query with departmentId and any additional filters
       const { page: _, limit: __, sortBy, sortOrder, ...filterQuery } = query || {};
       const searchQuery = {
-        ...(query.paperType !== 'general' && { departmentId }),
+        ...(query?.paperType !== 'general' && { departmentId }),
         ...filterQuery,
       };
 
-      // Get cached paper codes by type
-      const paperCodes = await this.fetchPaperCodesByType(departmentId);
+      // Fetch designations and paper codes in parallel
+      const [designations, paperCodes] = await Promise.all([
+        this.fetchDesignationsForDepartment(departmentId),
+        this.fetchPaperCodesByType(departmentId, query?.designation),
+      ]);
 
       // Build sort options
       const sortOptions: any = {};
@@ -242,18 +290,7 @@ export class PapersService {
         this.paperModel.countDocuments(searchQuery).exec(),
       ]);
 
-      // Fetch userId from supabaseId if provided
-      let userId: string | null = null;
-      if (supabaseId) {
-        try {
-          const user = await this.usersService.findUserBySupabaseId(supabaseId);
-          userId = user.userId;
-        } catch (error) {
-          // User not found in our database
-          userId = null;
-        }
-      }
-
+      // userId is already provided as parameter
       // Add hasAccess field to each paper
       const papersWithAccess = await Promise.all(
         papers.map(async (paper) => {
@@ -279,6 +316,7 @@ export class PapersService {
       );
 
       return {
+        designations,
         paperCodes,
         papers: papersWithAccess,
         ...pagination(page, limit, total),

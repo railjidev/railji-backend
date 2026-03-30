@@ -80,6 +80,10 @@ export class FetchPapersQueryDto {
 
   @IsString()
   @IsOptional()
+  designation?: string;
+
+  @IsString()
+  @IsOptional()
   paperCode?: string;
 
   @IsNumber()

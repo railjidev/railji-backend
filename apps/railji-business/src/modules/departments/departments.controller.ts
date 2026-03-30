@@ -49,15 +49,14 @@ export class DepartmentsController {
   }
 
   @Roles('superadmin')
-  @Get(':supabaseId/departments')
+  @Get('user/:userId')
   @HttpCode(HttpStatus.OK)
   async getUserDepartments(
-    @Param('supabaseId') supabaseId: string,
+    @Param('userId') userId: string,
     @Req() req: any,
     @Query() query?: any,
   ) {
-    const user = await this.usersService.getUserFromRequest(req);
-    const result = await this.departmentsService.fetchAllDepartments(query, user.userId);
+    const result = await this.departmentsService.fetchAllDepartments(query, userId);
     return {
       message: 'Departments retrieved successfully',
       data: result,

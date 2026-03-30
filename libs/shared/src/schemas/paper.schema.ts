@@ -15,6 +15,9 @@ export class Paper extends Document {
   @Prop({ required: true, enum: ['general', 'sectional', 'full'] })
   paperType: string;
 
+  @Prop()
+  designation: string;
+
   @Prop({ required: true })
   name: string;
 
