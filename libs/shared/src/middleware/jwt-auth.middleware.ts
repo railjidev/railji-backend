@@ -17,12 +17,27 @@ export class JwtAuthMiddleware implements NestMiddleware {
     // Check if route is in exclusion list
     const isExcluded = this.isRouteExcluded(req.baseUrl);
 
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    
     if (isExcluded) {
+      // For excluded routes, optionally populate user if token is provided
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        try {
+          const payload = this.decodeToken(token);
+          const user = await this.supabaseStrategy.validate(payload);
+          if (user) {
+            (req as any).user = user;
+          }
+        } catch (error) {
+          // Silently fail for excluded routes - don't block the request
+        }
+      }
       return next();
     }
 
-    // Extract token from Authorization header
-    const authHeader = req.headers.authorization;
+    // For non-excluded routes, require authentication
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException('No authorization token provided');
     }
