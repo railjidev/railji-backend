@@ -40,7 +40,7 @@ export class PapersService {
     this.logger.debug('Cleared all paper codes cache and top papers cache');
   }
 
-  async fetchDesignationsForDepartment(departmentId: string): Promise<string[]> {
+  async designationsForDepartment(departmentId: string): Promise<string[]> {
     try {
       const cacheKey = `designations:${departmentId}`;
 
@@ -71,7 +71,7 @@ export class PapersService {
       return cleanedDesignations;
     } catch (error) {
       this.errorHandler.handle(error, {
-        context: 'PapersService.fetchDesignationsForDepartment',
+        context: 'PapersService.designationsForDepartment',
       });
     }
   }
@@ -126,7 +126,7 @@ export class PapersService {
     }
   }
 
-  async fetchPaperCodesByType(
+  async paperCodesForDepartmentAndDesignation(
     departmentId: string,
     designations?: string,
   ): Promise<PaperCodesByType> {
@@ -148,13 +148,13 @@ export class PapersService {
           // General papers from entire collection (no department filter)
           {
             paperType: 'general',
-            ...(designations && { designations }),
+            ...(designations && { designation: designations }),
           },
           // Non-general papers from specific department only
           {
             departmentId,
             paperType: { $ne: 'general' },
-            ...(designations && { designations }),
+            ...(designations && { designation: designations }),
           },
         ],
       };
@@ -221,7 +221,7 @@ export class PapersService {
       return cleanedPaperCodes;
     } catch (error) {
       this.errorHandler.handle(error, {
-        context: 'PapersService.fetchPaperCodesByType',
+        context: 'PapersService.paperCodesForDepartmentAndDesignation',
       });
     }
   }
@@ -252,8 +252,8 @@ export class PapersService {
 
       // Fetch designations and paper codes in parallel
       const [designations, paperCodes] = await Promise.all([
-        this.fetchDesignationsForDepartment(departmentId),
-        this.fetchPaperCodesByType(departmentId, query?.designation),
+        this.designationsForDepartment(departmentId),
+        this.paperCodesForDepartmentAndDesignation(departmentId, query?.designation),
       ]);
 
       // Build sort options
