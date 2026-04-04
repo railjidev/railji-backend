@@ -145,10 +145,9 @@ export class PapersService {
       // Build match conditions
       const matchConditions: any = {
         $or: [
-          // General papers from entire collection (no department filter)
+          // General papers from entire collection (no department filter, no designation filter)
           {
             paperType: 'general',
-            ...(designations && { designation: designations }),
           },
           // Non-general papers from specific department only
           {
