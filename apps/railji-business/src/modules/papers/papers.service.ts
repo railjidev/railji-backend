@@ -244,10 +244,36 @@ export class PapersService {
 
       // Build the query with departmentId and any additional filters
       const { page: _, limit: __, sortBy, sortOrder, ...filterQuery } = query || {};
-      const searchQuery = {
-        ...(query?.paperType !== 'general' && { departmentId }),
-        ...filterQuery,
-      };
+      
+      // Special handling for general papers
+      let searchQuery: any;
+      if (query?.paperType === 'general') {
+        // For general papers, only filter by paperCode if provided
+        searchQuery = {
+          paperType: 'general',
+          ...(query?.paperCode && { paperCode: query.paperCode }),
+        };
+      } else {
+        // For non-general papers, apply department and designation filters
+        searchQuery = {
+          ...filterQuery,
+          $or: [
+            // General papers (always included, filtered by paperCode if provided)
+            {
+              paperType: 'general',
+              ...(query?.paperCode && { paperCode: query.paperCode }),
+            },
+            // Non-general papers from specific department
+            {
+              departmentId,
+              paperType: { $ne: 'general' },
+              ...(query?.designation && { designation: { $in: [query.designation] } }),
+              ...(query?.paperCode && { paperCode: query.paperCode }),
+              ...(query?.year && { year: query.year }),
+            },
+          ],
+        };
+      }
 
       // Fetch designations and paper codes in parallel
       const [designations, paperCodes] = await Promise.all([
