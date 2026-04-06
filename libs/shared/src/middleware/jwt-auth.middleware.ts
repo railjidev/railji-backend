@@ -15,7 +15,9 @@ export class JwtAuthMiddleware implements NestMiddleware {
 
   async use(req: Request, res: Response, next: NextFunction) {
     // Check if route is in exclusion list
-    const isExcluded = this.isRouteExcluded(req.baseUrl);
+    // Use the full path (baseUrl + path) for proper route matching
+    const fullPath = req.baseUrl + req.path;
+    const isExcluded = this.isRouteExcluded(fullPath);
 
     // Extract token from Authorization header
     const authHeader = req.headers.authorization;
