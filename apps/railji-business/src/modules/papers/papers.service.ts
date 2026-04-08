@@ -264,9 +264,9 @@ export class PapersService {
       const { page: _, limit: __, sortBy, sortOrder, ...filterQuery } = query || {};
       
       // Build query based only on provided filters
-      const searchQuery: any = {
+      const searchQuery = {
+        ...(query.paperType !== 'general' && { departmentId }),
         ...filterQuery,
-        departmentId,
       };
 
 
