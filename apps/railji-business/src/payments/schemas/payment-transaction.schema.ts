@@ -21,7 +21,7 @@ export enum TransactionType {
   VERIFICATION = 'verification',
 }
 
-@Schema({ timestamps: true, collection: 'payment_transactions' })
+@Schema({ timestamps: true, collection: 'payments' })
 export class PaymentTransaction {
   @Prop({ required: true })
   transactionId: string;
