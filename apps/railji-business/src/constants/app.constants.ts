@@ -82,7 +82,16 @@ export const APP_CONSTANTS = {
     '/business/v1/departments',
     '/business/v1/departments/:departmentId',
     '/business/v1/users',
+    '/business/v1/payments/webhook/razorpay',
   ],
+
+  PAYMENT_GATEWAY_TOKENS: {
+    RAZORPAY: 'RAZORPAY_GATEWAY',
+    STRIPE: 'STRIPE_GATEWAY',
+    PAYU: 'PAYU_GATEWAY',
+  } as const,
+
+  PAYMENT_CONFIG_SERVICE: 'PAYMENT_CONFIG_SERVICE',
 } as const;
 
 // Export individual constants for convenience
@@ -94,4 +103,6 @@ export const {
   QUESTION_TYPES,
   DEPARTMENTS,
   AUTH_EXCLUDED_ROUTES,
+  PAYMENT_GATEWAY_TOKENS,
+  PAYMENT_CONFIG_SERVICE
 } = APP_CONSTANTS;
