@@ -10,8 +10,8 @@ export const APP_CONSTANTS = {
 
   // Authentication Exclusions (routes that don't require JWT authentication)
   AUTH_EXCLUDED_ROUTES: [
-    '/dashboard/v1/health',
-    '/dashboard/v1/users/login',
+    '/dashboard/v1/health/',
+    '/dashboard/v1/users/login/',
   ],
 } as const;
 
