@@ -77,12 +77,12 @@ export const APP_CONSTANTS = {
 
   // Authentication Exclusions (routes that don't require JWT authentication)
   AUTH_EXCLUDED_ROUTES: [
-    '/business/v1/health',
-    '/business/v1/papers/top',
-    '/business/v1/departments',
-    '/business/v1/departments/:departmentId',
-    '/business/v1/users',
-    '/business/v1/payments/webhook/razorpay',
+    '/business/v1/health/',
+    '/business/v1/departments/',
+    '/business/v1/papers/top/',
+    '/business/v1/papers/:departmentId/',
+    '/business/v1/users/',
+    '/business/v1/payments/webhook/razorpay/',
   ],
 } as const;
 
