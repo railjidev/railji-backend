@@ -55,7 +55,7 @@ export class PaymentsController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-razorpay-signature') signature: string,
   ) {
-    this.logger.log('Webhook received');
+    this.logger.log(`Webhook received - Body: ${JSON.stringify(req.body)}, Signature: ${signature}`);
     
     if (!signature) {
       throw new Error('Missing signature');

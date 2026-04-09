@@ -6,7 +6,9 @@ import { config } from './config/config';
 import { API_PREFIX } from './constants/app.constants';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true, // Enable raw body for webhook signature verification
+  });
 
   // Setup Logger
   const loggerService = app.get(LoggerServiceProvider);

@@ -14,10 +14,12 @@ export class RazorpayGateway implements IPaymentGateway {
   private razorpay: any;
   private keyId: string;
   private keySecret: string;
+  private webhookSecret: string;
 
   constructor() {
     this.keyId = config.payment.razorpay.keyId;
     this.keySecret = config.payment.razorpay.keySecret;
+    this.webhookSecret = config.payment.razorpay.webhookSecret;
 
     if (!this.keyId || !this.keySecret) {
       this.logger.warn('Razorpay credentials not configured');
@@ -94,11 +96,17 @@ export class RazorpayGateway implements IPaymentGateway {
   }
 
   verifyWebhookSignature(payload: Buffer, signature: string): boolean {
+    if (!this.webhookSecret) {
+      this.logger.error('Webhook secret not configured');
+      return false;
+    }
+
     const expectedSignature = crypto
-      .createHmac('sha256', this.keySecret)
+      .createHmac('sha256', this.webhookSecret)
       .update(payload)
       .digest('hex');
 
+    this.logger.debug(`Expected: ${expectedSignature}, Received: ${signature}`);
     return expectedSignature === signature;
   }
 
