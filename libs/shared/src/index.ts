@@ -26,6 +26,7 @@ export {
 export { CacheService } from './services/cache.service';
 export { ErrorHandlerService } from './services/error-handler.service';
 export { SharedUsersService } from './services/users.service';
+export { SharedSubscriptionsService, AuditLogger } from './services/subscriptions.service';
 
 // Schemas
 export { User, UserSchema } from './schemas/user.schema';
@@ -44,6 +45,9 @@ export {
   QuestionDetail,
   QuestionDetailSchema,
 } from './schemas/question-bank.schema';
+
+// DTOs
+export { GrantAccessDto } from './dto/grant-access.dto';
 
 // Utils
 export {

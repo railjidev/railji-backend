@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { SubscriptionsService } from './subscriptions.service';
-import { GrantAccessDto } from './dto/grant-access.dto';
+import { GrantAccessDto } from '@railji/shared';
 import { RevokeAccessDto } from './dto/revoke-access.dto';
 import { paginate, Roles } from '@railji/shared';
 

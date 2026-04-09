@@ -1,5 +1,4 @@
-import { IsString, IsArray, IsOptional, IsDateString, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsDateString } from 'class-validator';
 
 export class GrantAccessDto {
   @IsString()
