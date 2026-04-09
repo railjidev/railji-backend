@@ -22,10 +22,11 @@
   },
   "dependencies": {
     "@nestjs/passport": "^10.0.3",
+    "@supabase/supabase-js": "^2.39.0",
+    "jwks-rsa": "^3.1.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "jwks-rsa": "^3.1.0",
-    "@supabase/supabase-js": "^2.39.0"
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {
     "@types/passport-jwt": "^4.0.1"

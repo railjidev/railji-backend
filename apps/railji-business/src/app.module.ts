@@ -7,6 +7,7 @@ import { PapersModule } from './modules/papers/papers.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { UsersModule } from './modules/users/users.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { PaymentsModule } from './payments/payments.module';
 import {
   SharedCommonModule,
   LoggingInterceptor,
@@ -36,6 +37,7 @@ import { AUTH_EXCLUDED_ROUTES } from './constants/app.constants';
     PapersModule,
     DepartmentsModule,
     SubscriptionsModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [
