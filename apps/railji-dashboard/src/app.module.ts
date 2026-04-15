@@ -64,6 +64,10 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply((req: any, res: any, next: any) => {
+        // Allow OPTIONS requests (CORS preflight) to pass through without authentication
+        if (req.method === 'OPTIONS') {
+          return next();
+        }
         const supabaseStrategy = this.getSupabaseStrategy();
         const middleware = new JwtAuthMiddleware(supabaseStrategy, AUTH_EXCLUDED_ROUTES);
         return middleware.use(req, res, next);
