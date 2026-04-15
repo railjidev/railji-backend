@@ -83,6 +83,7 @@ export const APP_CONSTANTS = {
     '/business/v1/papers/:departmentId',
     '/business/v1/users',
     '/business/v1/payments/webhook/razorpay',
+    '/business/v1/payments/plans',
   ],
 } as const;
 
