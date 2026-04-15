@@ -20,7 +20,7 @@
     "build:shared": "cd libs/shared && npm run build",
     "build:business": "cd apps/railji-business && npm run build",
     "build:dashboard": "cd apps/railji-dashboard && npm run build",
-    "build": "npm run build:shared && npm run build:business && npm run build:dashboard",
+    "build:all": "npm run build:shared && npm run build:business && npm run build:dashboard",
     "dev:business": "cd apps/railji-business && npm run start:dev",
     "dev:dashboard": "cd apps/railji-dashboard && npm run start:dev",
     "stage:business": "npm run build:shared && npm run build:business && cd apps/railji-business && npm run start:prod",
